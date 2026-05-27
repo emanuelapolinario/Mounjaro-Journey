@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mounjaro Tracker</title>
+    <title>Mounjaro Journey</title>
+    <meta name="description" content="Tracker completo para acompanhamento do tratamento com Mounjaro">
+    <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mounjaro">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -15,25 +19,42 @@
             padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
             -webkit-tap-highlight-color: transparent;
         }
-
-        /* ── Estoque: ampola animada ── */
         .vial-fill { transition: height 0.6s cubic-bezier(.4,0,.2,1); }
-
-        /* ── Alerta de estoque pulsante ── */
         @keyframes pulse-border {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.35); }
-            50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+            0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.35); }
+            50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
         }
         .vial-critical { animation: pulse-border 1.8s ease-in-out infinite; }
-
-        /* ── Badge "Estoque Baixo" shake ── */
         @keyframes shake {
-            0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}
+            0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}
+            40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}
         }
         .badge-shake { animation: shake 0.5s ease; }
+        @keyframes pulse-glow {
+            0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,.3); }
+            50%      { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+        }
+        .nota-destaque { animation: pulse-glow 2.5s ease-in-out infinite; }
+        @keyframes bar-fill { from { width: 0; } }
+        .bar-anim { animation: bar-fill 0.8s cubic-bezier(.4,0,.2,1) forwards; }
+        .tab-btn.active {
+            background: rgba(99,102,241,.2);
+            border-color: rgba(99,102,241,.5);
+            color: #a5b4fc;
+        }
+        .sw-toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+            padding: 10px 16px; font-size: 12px; color: #f1f5f9;
+            z-index: 9999; box-shadow: 0 4px 24px rgba(0,0,0,.5);
+            transition: opacity .3s; pointer-events: none;
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen px-4 pb-12">
+
+<!-- Toast SW -->
+<div id="swToast" class="sw-toast" style="opacity:0"></div>
 
 <!-- ══════════════════════════════════════════
      TELA DE LOGIN
@@ -91,69 +112,53 @@
                 <h3 class="text-sm font-bold text-slate-200">Ajustes do Tratamento</h3>
                 <button onclick="toggleConfigModal()" class="text-xs text-slate-400 font-bold cursor-pointer">Fechar</button>
             </div>
-
-            <!-- Peso / Meta -->
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-[11px] text-slate-400 mb-1">Peso Inicial Histórico (kg)</label>
-                    <input type="number" step="0.1" id="configPesoInicial"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    <input type="number" step="0.1" id="configPesoInicial" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
                 <div>
                     <label class="block text-[11px] text-slate-400 mb-1">Meta Alvo Final (kg)</label>
-                    <input type="number" step="0.1" id="configPesoMeta"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    <input type="number" step="0.1" id="configPesoMeta" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
             </div>
-
-            <!-- Altura / Idade -->
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-[11px] text-slate-400 mb-1">Altura (cm)</label>
-                    <input type="number" id="configAltura"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    <input type="number" id="configAltura" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
                 <div>
                     <label class="block text-[11px] text-slate-400 mb-1">Idade (anos)</label>
-                    <input type="number" id="configIdade"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    <input type="number" id="configIdade" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
             </div>
-
-            <!-- ▸▸ NOVO: Sexo + Nível de atividade -->
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-[11px] text-slate-400 mb-1">Sexo Biológico</label>
-                    <select id="configSexo"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    <select id="configSexo" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                         <option value="M">Masculino</option>
                         <option value="F">Feminino</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-[11px] text-slate-400 mb-1">Nível de Atividade</label>
-                    <select id="configAtividade"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                        <option value="1.2">Sedentário (sem exercício)</option>
-                        <option value="1.375">Levemente ativo (1-3x/sem)</option>
-                        <option value="1.55">Moderado (3-5x/sem)</option>
-                        <option value="1.725">Muito ativo (6-7x/sem)</option>
-                        <option value="1.9">Extremamente ativo (2x/dia)</option>
+                    <select id="configAtividade" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                        <option value="1.2">Sedentário</option>
+                        <option value="1.375">Levemente ativo</option>
+                        <option value="1.55">Moderado</option>
+                        <option value="1.725">Muito ativo</option>
+                        <option value="1.9">Extremamente ativo</option>
                     </select>
                 </div>
             </div>
-
-            <!-- Ampolas / Dose -->
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-[11px] text-slate-400 mb-1">Qtd Ampolas 15mg Totais</label>
-                    <input type="number" id="configAmpolas"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    <input type="number" id="configAmpolas" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-1">Dose Alvo Atual (mg / UI)</label>
-                    <select id="configDoseAlvo"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    <label class="block text-[11px] text-slate-400 mb-1">Dose Alvo Atual (mg)</label>
+                    <select id="configDoseAlvo" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                         <option value="2.5">2.5 mg — 8 UI</option>
                         <option value="5.0">5.0 mg — 16 UI</option>
                         <option value="7.5">7.5 mg — 24 UI</option>
@@ -161,55 +166,35 @@
                     </select>
                 </div>
             </div>
-
             <button onclick="salvarConfiguracoes()"
                 class="w-full bg-emerald-500 text-slate-950 py-2.5 rounded-xl text-xs font-bold active:opacity-90 cursor-pointer">
                 Salvar Alterações
             </button>
-
-            <!-- Tabela de referência mg → UI -->
             <div class="bg-slate-900/60 rounded-xl p-2.5 border border-slate-800">
                 <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-2">💉 Referência Seringa (100 UI/mL)</p>
                 <div class="grid grid-cols-4 gap-1.5 text-center">
-                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700">
-                        <span class="text-[9px] font-black text-white block">2.5 mg</span>
-                        <span class="text-[9px] font-bold text-indigo-300">8 UI</span>
-                    </div>
-                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700">
-                        <span class="text-[9px] font-black text-white block">5.0 mg</span>
-                        <span class="text-[9px] font-bold text-indigo-300">16 UI</span>
-                    </div>
-                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700">
-                        <span class="text-[9px] font-black text-white block">7.5 mg</span>
-                        <span class="text-[9px] font-bold text-indigo-300">24 UI</span>
-                    </div>
-                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700">
-                        <span class="text-[9px] font-black text-white block">10.0 mg</span>
-                        <span class="text-[9px] font-bold text-indigo-300">32 UI</span>
-                    </div>
+                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700"><span class="text-[9px] font-black text-white block">2.5 mg</span><span class="text-[9px] font-bold text-indigo-300">8 UI</span></div>
+                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700"><span class="text-[9px] font-black text-white block">5.0 mg</span><span class="text-[9px] font-bold text-indigo-300">16 UI</span></div>
+                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700"><span class="text-[9px] font-black text-white block">7.5 mg</span><span class="text-[9px] font-bold text-indigo-300">24 UI</span></div>
+                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700"><span class="text-[9px] font-black text-white block">10.0 mg</span><span class="text-[9px] font-bold text-indigo-300">32 UI</span></div>
                 </div>
             </div>
-
-            <!-- Lançar dose histórica -->
             <div class="pt-4 border-t border-slate-700 space-y-3">
                 <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">⏳ Lançar Dose Antiga</h4>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-[10px] text-slate-400 mb-0.5">Data da Aplicação</label>
-                        <input type="date" id="histData"
-                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                        <input type="date" id="histData" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                     </div>
                     <div>
                         <label class="block text-[10px] text-slate-400 mb-0.5">Peso no Dia (kg)</label>
-                        <input type="number" step="0.1" id="histPeso"
-                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                        <input type="number" step="0.1" id="histPeso" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-[10px] text-slate-400 mb-0.5">Dose Tomada</label>
-                        <select id="histDose"
-                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                        <select id="histDose" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                             <option value="2.5 mg">2.5 mg — 8 UI</option>
                             <option value="5.0 mg">5.0 mg — 16 UI</option>
                             <option value="7.5 mg">7.5 mg — 24 UI</option>
@@ -218,8 +203,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] text-slate-400 mb-0.5">Local do Corpo</label>
-                        <select id="histLocal"
-                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                        <select id="histLocal" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                             <option value="Abdômen (Esquerdo)">Abdômen Esq</option>
                             <option value="Abdômen (Direito)">Abdômen Dir</option>
                             <option value="Coxa Esquerda">Coxa Esq</option>
@@ -232,10 +216,8 @@
                     Inserir no Histórico
                 </button>
             </div>
-
             <div class="pt-2">
-                <button onclick="limparTudo()"
-                    class="w-full text-center text-xs text-rose-400 hover:underline cursor-pointer">
+                <button onclick="limparTudo()" class="w-full text-center text-xs text-rose-400 hover:underline cursor-pointer">
                     Apagar Tudo e Resetar App
                 </button>
             </div>
@@ -266,53 +248,37 @@
                     <option value="Fadiga">Fadiga</option>
                 </select>
                 <div class="grid grid-cols-2 gap-2 pt-1">
-                    <button onclick="fecharModalRapido()"
-                        class="py-2.5 bg-slate-700 text-slate-300 rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
-                    <button onclick="confirmarInjecaoRapida()"
-                        class="py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 rounded-xl text-xs font-black shadow-lg cursor-pointer">Salvar</button>
+                    <button onclick="fecharModalRapido()" class="py-2.5 bg-slate-700 text-slate-300 rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
+                    <button onclick="confirmarInjecaoRapida()" class="py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 rounded-xl text-xs font-black shadow-lg cursor-pointer">Salvar</button>
                 </div>
             </div>
         </section>
 
         <!-- ══════════════════════════════
-             PAINEL DE ESTOQUE — NOVO
+             ESTOQUE DE AMPOLAS
         ══════════════════════════════ -->
         <section class="bg-gradient-to-br from-slate-800 to-slate-850 p-4 rounded-2xl border border-indigo-500/10 shadow-xl space-y-4">
-
-            <!-- Resumo rápido -->
             <div class="flex justify-between text-center bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 text-xs">
                 <div><span class="text-[9px] text-slate-500 block font-bold uppercase">Tratamento</span><span id="resTotalDoses" class="font-bold text-indigo-400">0 sem</span></div>
                 <div><span class="text-[9px] text-slate-500 block font-bold uppercase">Dose Atual</span><span id="resDoseConfigurada" class="font-bold text-slate-300">--</span></div>
                 <div><span class="text-[9px] text-slate-500 block font-bold uppercase">Estoque Até</span><span id="resDataTermino" class="font-bold text-slate-300">--</span></div>
             </div>
-
-            <!-- ══ ALERTA DE ESTOQUE CRÍTICO ══ -->
-            <div id="alertaEstoqueCritico"
-                class="hidden items-center gap-2 bg-rose-500/10 border border-rose-500/30 rounded-xl px-3 py-2.5 text-xs font-bold text-rose-300">
-                <span class="text-base">🚨</span>
-                <span id="txtAlertaEstoque">Estoque crítico!</span>
+            <div id="alertaEstoqueCritico" class="hidden items-center gap-2 bg-rose-500/10 border border-rose-500/30 rounded-xl px-3 py-2.5 text-xs font-bold text-rose-300">
+                <span class="text-base">🚨</span><span id="txtAlertaEstoque">Estoque crítico!</span>
             </div>
-
-            <!-- ══ AMPOLAS VISUAIS MELHORADAS ══ -->
             <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800/80 space-y-3">
                 <div class="flex justify-between items-center">
                     <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Estoque Físico de Ampolas (15 mg)</span>
                     <span id="lblEstoqueResumo" class="text-[10px] font-bold text-indigo-300">--</span>
                 </div>
-
-                <!-- Grid de ampolas -->
                 <div id="containerAmpolasVisuais" class="flex flex-wrap gap-2 justify-start items-end pt-1"></div>
-
-                <!-- Legenda dos níveis -->
                 <div class="flex items-center gap-3 text-[9px] text-slate-500 pt-1 border-t border-slate-800/60">
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-emerald-500 inline-block"></span>Cheio (>50%)</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-amber-500 inline-block"></span>Médio (20–50%)</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-rose-500 inline-block"></span>Crítico (<20%)</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-emerald-500 inline-block"></span>Cheio (&gt;50%)</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-amber-500 inline-block"></span>Médio</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-rose-500 inline-block"></span>Crítico</span>
                     <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-slate-700 inline-block"></span>Vazio</span>
                 </div>
             </div>
-
-            <!-- Barra de rendimento do vial em uso -->
             <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800/80 space-y-2">
                 <div class="flex justify-between items-center">
                     <span class="text-[10px] text-slate-400 font-medium">Vial em uso</span>
@@ -326,14 +292,9 @@
                     <span id="lblMgRestantesVial">--</span>
                 </div>
             </div>
-
-            <!-- Projeção de consumo futuro por ampola -->
             <div id="containerProjecaoVials" class="space-y-1.5"></div>
-
-            <div id="boxStatusMeta"
-                class="p-2.5 rounded-xl text-[11px] border flex items-center gap-2 bg-slate-900/40 border-slate-700"></div>
-            <div id="boxAlertaClinico"
-                class="p-2.5 rounded-xl text-[11px] border flex items-center gap-2 bg-amber-500/10 border-amber-500/20 text-amber-400 hidden"></div>
+            <div id="boxStatusMeta" class="p-2.5 rounded-xl text-[11px] border flex items-center gap-2 bg-slate-900/40 border-slate-700"></div>
+            <div id="boxAlertaClinico" class="p-2.5 rounded-xl text-[11px] border flex items-center gap-2 bg-amber-500/10 border-amber-500/20 text-amber-400 hidden"></div>
         </section>
 
         <!-- ══════════════════════════════
@@ -345,22 +306,14 @@
                     <h3 class="text-sm font-semibold text-blue-400 uppercase tracking-wider">💧 Hidratação</h3>
                     <p class="text-[10px] text-slate-500 mt-0.5">Meta baseada no seu peso atual</p>
                 </div>
-                <button onclick="resetarAguaManual()"
-                    class="text-[10px] bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700 text-slate-400 active:bg-slate-950 cursor-pointer">Zerar dia</button>
+                <button onclick="resetarAguaManual()" class="text-[10px] bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700 text-slate-400 active:bg-slate-950 cursor-pointer">Zerar dia</button>
             </div>
             <div class="flex items-center gap-4">
                 <div class="relative flex-shrink-0 w-20 h-20">
                     <svg viewBox="0 0 80 80" class="w-full h-full -rotate-90">
                         <circle cx="40" cy="40" r="32" fill="none" stroke="#0f172a" stroke-width="7"/>
-                        <circle id="anelAgua" cx="40" cy="40" r="32" fill="none" stroke="url(#gradAgua)"
-                            stroke-width="7" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"
-                            style="transition: stroke-dashoffset 0.5s ease"/>
-                        <defs>
-                            <linearGradient id="gradAgua" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#3b82f6"/>
-                                <stop offset="100%" stop-color="#22d3ee"/>
-                            </linearGradient>
-                        </defs>
+                        <circle id="anelAgua" cx="40" cy="40" r="32" fill="none" stroke="url(#gradAgua)" stroke-width="7" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201" style="transition: stroke-dashoffset 0.5s ease"/>
+                        <defs><linearGradient id="gradAgua" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs>
                     </svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center">
                         <span id="lblPorcentagemAgua" class="text-base font-black text-white leading-none">0%</span>
@@ -386,8 +339,7 @@
             </div>
             <div class="space-y-1.5">
                 <div class="relative w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800/80">
-                    <div id="barraAguaProgresso"
-                        class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full w-0 transition-all duration-500 rounded-full"></div>
+                    <div id="barraAguaProgresso" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full w-0 transition-all duration-500 rounded-full"></div>
                     <div class="absolute top-0 h-full w-px bg-slate-700/60" style="left:25%"></div>
                     <div class="absolute top-0 h-full w-px bg-slate-700/60" style="left:50%"></div>
                     <div class="absolute top-0 h-full w-px bg-slate-700/60" style="left:75%"></div>
@@ -402,26 +354,62 @@
                 <button onclick="adicionarAgua(350)" class="py-2.5 bg-blue-600/20 border border-blue-500/35 rounded-xl text-[11px] font-bold text-blue-200 active:scale-95 transition-all cursor-pointer">350ml</button>
                 <button onclick="adicionarAgua(500)" class="py-2.5 bg-blue-600/25 border border-blue-500/45 rounded-xl text-[11px] font-bold text-blue-200 active:scale-95 transition-all cursor-pointer">500ml</button>
             </div>
-            <div id="boxStatusAgua"
-                class="hidden items-center gap-2 justify-center bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-2 text-[11px] font-bold text-emerald-300">
+            <div id="boxStatusAgua" class="hidden items-center gap-2 justify-center bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-2 text-[11px] font-bold text-emerald-300">
                 🎉 Meta de hidratação atingida!
             </div>
         </section>
 
         <!-- ══════════════════════════════
-             MÉTRICAS E METABOLISMO — MELHORADO
+             NOTIFICAÇÕES
+        ══════════════════════════════ -->
+        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/60 space-y-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">🔔</span>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Notificações</h3>
+                        <p class="text-[10px] text-slate-400">Dose e hidratação</p>
+                    </div>
+                </div>
+                <button onclick="solicitarPermissaoNotif()" id="btnAtivNotif"
+                    class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold cursor-pointer active:opacity-90">
+                    Ativar
+                </button>
+            </div>
+            <div id="notifStatus" class="text-[10px] text-slate-500 bg-slate-900/50 rounded-xl px-3 py-2 border border-slate-800">
+                Verificando...
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="flex items-center justify-between bg-slate-900/50 rounded-xl px-3 py-2 border border-slate-800">
+                    <span class="text-[10px] text-slate-300 font-semibold">💉 Dose</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleNotifDose" class="sr-only peer" checked onchange="salvarPrefNotif()">
+                        <div class="w-8 h-4 bg-slate-700 peer-checked:bg-indigo-600 rounded-full transition-colors"></div>
+                        <div class="absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform peer-checked:translate-x-4 shadow"></div>
+                    </label>
+                </div>
+                <div class="flex items-center justify-between bg-slate-900/50 rounded-xl px-3 py-2 border border-slate-800">
+                    <span class="text-[10px] text-slate-300 font-semibold">💧 Água (18h)</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleNotifAgua" class="sr-only peer" checked onchange="salvarPrefNotif()">
+                        <div class="w-8 h-4 bg-slate-700 peer-checked:bg-blue-600 rounded-full transition-colors"></div>
+                        <div class="absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform peer-checked:translate-x-4 shadow"></div>
+                    </label>
+                </div>
+            </div>
+            <button onclick="testarNotificacao()" class="w-full py-2 bg-slate-700 border border-slate-600 rounded-xl text-xs font-semibold text-slate-300 cursor-pointer active:opacity-90">
+                Enviar notificação de teste
+            </button>
+        </section>
+
+        <!-- ══════════════════════════════
+             MÉTRICAS E METABOLISMO
         ══════════════════════════════ -->
         <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/60 shadow-xl space-y-3">
             <div class="flex justify-between items-center">
                 <h3 class="text-sm font-semibold text-emerald-400 uppercase tracking-wider">🎯 Métricas e Metabolismo</h3>
-                <!-- Badge do perfil -->
-                <span id="badgePerfilMetabolico"
-                    class="text-[9px] font-bold px-2 py-0.5 rounded-lg border bg-slate-900 border-slate-700 text-slate-400">
-                    -- • --
-                </span>
+                <span id="badgePerfilMetabolico" class="text-[9px] font-bold px-2 py-0.5 rounded-lg border bg-slate-900 border-slate-700 text-slate-400">-- • --</span>
             </div>
-
-            <!-- Nutrição rápida -->
             <div class="grid grid-cols-3 gap-2">
                 <div class="bg-slate-900/80 p-2.5 rounded-xl text-center border border-slate-800">
                     <span class="text-[10px] text-slate-400 block mb-0.5">🥩 Proteína</span>
@@ -438,8 +426,6 @@
                     <div class="border-t border-slate-700/50 pt-0.5"><span class="text-[8px] text-slate-400 block">Média</span><span id="lblMediaSemanal" class="text-[11px] font-black text-indigo-400">--</span></div>
                 </div>
             </div>
-
-            <!-- ▸▸ NOVO: Breakdown do TDEE -->
             <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800 space-y-2">
                 <div class="grid grid-cols-3 gap-2 text-center text-xs">
                     <div>
@@ -458,7 +444,6 @@
                         <span class="text-[8px] text-slate-600 block">consumo</span>
                     </div>
                 </div>
-                <!-- Barra de déficit -->
                 <div class="space-y-0.5">
                     <div class="flex justify-between text-[9px] text-slate-500">
                         <span>Déficit calórico diário</span>
@@ -467,26 +452,75 @@
                     <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
                         <div id="barraDeficit" class="h-full bg-amber-500 w-0 transition-all duration-500 rounded-full"></div>
                     </div>
-                    <div class="text-[8px] text-slate-600 text-right">Déficit ideal: 500–750 kcal/dia</div>
                 </div>
             </div>
-
-            <!-- ▸▸ NOVO: IMC atual -->
             <div id="boxIMC" class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800 hidden">
                 <div class="flex justify-between items-center mb-1.5">
                     <span class="text-[10px] text-slate-400 font-bold uppercase">IMC Atual</span>
                     <span id="lblIMCValor" class="text-xs font-black text-white">--</span>
                 </div>
-                <!-- Régua de IMC -->
                 <div class="relative w-full h-3 rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-emerald-500 via-yellow-500 to-rose-600">
-                    <div id="marcadorIMC"
-                        class="absolute top-0 h-full w-1 bg-white rounded-full shadow-md transition-all duration-700"
-                        style="left: 0%"></div>
+                    <div id="marcadorIMC" class="absolute top-0 h-full w-1 bg-white rounded-full shadow-md transition-all duration-700" style="left:0%"></div>
                 </div>
                 <div class="flex justify-between text-[8px] text-slate-500 mt-0.5 font-bold">
                     <span>16</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
                 </div>
                 <div class="text-[9px] text-center font-bold mt-1" id="lblClasseIMC">--</div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════
+             NOTA DE DESEMPENHO  ← NOVO
+        ══════════════════════════════ -->
+        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/60 space-y-3">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">🏅</span>
+                <div>
+                    <h3 class="text-sm font-bold text-white">Sua Nota no Tratamento</h3>
+                    <p class="text-[10px] text-slate-400">Comparado com a média clínica (SURMOUNT-1, NEJM 2022)</p>
+                </div>
+            </div>
+            <div id="boxNota" class="rounded-2xl p-4 border text-center nota-destaque bg-slate-900/60 border-slate-700">
+                <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Sua Performance</p>
+                <div class="flex items-baseline justify-center gap-2">
+                    <span id="notaLetra" class="text-5xl font-black text-slate-400">--</span>
+                    <span id="notaDescricao" class="text-sm font-bold text-slate-400">Aguardando dados</span>
+                </div>
+                <p id="notaDetalhe" class="text-[10px] text-slate-500 mt-2">Registre pelo menos 2 doses para calcular.</p>
+            </div>
+            <div class="space-y-2">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Comparativo kg/semana</p>
+                <div class="space-y-2">
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1"><span class="text-slate-400">Você</span><span id="txtSuaMediaNota" class="font-bold text-emerald-400">-- kg/sem</span></div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                            <div id="barraVoceNota" class="h-full bar-anim rounded-full bg-emerald-500" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1"><span class="text-slate-400">Média clínica Mounjaro</span><span class="font-bold text-indigo-400">0.52 kg/sem</span></div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                            <div class="h-full bg-indigo-500/60 rounded-full" style="width:52%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1"><span class="text-slate-400">Top 10% do estudo</span><span class="font-bold text-amber-400">0.85 kg/sem</span></div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                            <div class="h-full bg-amber-500/50 rounded-full" style="width:85%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-900/50 rounded-xl p-2.5 border border-slate-800 space-y-1.5">
+                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Tabela de Referência</p>
+                <div class="grid grid-cols-1 gap-1">
+                    <div class="flex items-center gap-2 text-[9px]"><span class="w-5 font-black text-emerald-400 text-center">S+</span><div class="flex-1 bg-slate-950 h-1 rounded-full overflow-hidden"><div class="h-full bg-emerald-400 rounded-full" style="width:100%"></div></div><span class="text-slate-500 w-36">&gt;1.0 kg/sem — Excepcional</span></div>
+                    <div class="flex items-center gap-2 text-[9px]"><span class="w-5 font-black text-emerald-300 text-center">S</span><div class="flex-1 bg-slate-950 h-1 rounded-full overflow-hidden"><div class="h-full bg-emerald-300 rounded-full" style="width:85%"></div></div><span class="text-slate-500 w-36">0.75–1.0 — Ótimo</span></div>
+                    <div class="flex items-center gap-2 text-[9px]"><span class="w-5 font-black text-teal-300 text-center">A</span><div class="flex-1 bg-slate-950 h-1 rounded-full overflow-hidden"><div class="h-full bg-teal-400 rounded-full" style="width:70%"></div></div><span class="text-slate-500 w-36">0.55–0.75 — Acima da média</span></div>
+                    <div class="flex items-center gap-2 text-[9px]"><span class="w-5 font-black text-indigo-300 text-center">B</span><div class="flex-1 bg-slate-950 h-1 rounded-full overflow-hidden"><div class="h-full bg-indigo-400 rounded-full" style="width:52%"></div></div><span class="text-slate-500 w-36">0.35–0.55 — Na média clínica</span></div>
+                    <div class="flex items-center gap-2 text-[9px]"><span class="w-5 font-black text-amber-300 text-center">C</span><div class="flex-1 bg-slate-950 h-1 rounded-full overflow-hidden"><div class="h-full bg-amber-400 rounded-full" style="width:35%"></div></div><span class="text-slate-500 w-36">0.20–0.35 — Abaixo da média</span></div>
+                    <div class="flex items-center gap-2 text-[9px]"><span class="w-5 font-black text-rose-300 text-center">D</span><div class="flex-1 bg-slate-950 h-1 rounded-full overflow-hidden"><div class="h-full bg-rose-400 rounded-full" style="width:15%"></div></div><span class="text-slate-500 w-36">&lt;0.20 — Converse com médico</span></div>
+                </div>
             </div>
         </section>
 
@@ -504,9 +538,60 @@
                     <span id="lblDiasRestantes" class="text-base font-black text-indigo-300">-- dias</span>
                 </div>
             </div>
-            <div id="calendarioContainer"
-                class="flex gap-2.5 overflow-x-auto pb-2 pt-0.5 snap-x snap-mandatory"
-                style="-webkit-overflow-scrolling: touch; scrollbar-width: none;"></div>
+            <div id="calendarioContainer" class="flex gap-2.5 overflow-x-auto pb-2 pt-0.5 snap-x snap-mandatory" style="-webkit-overflow-scrolling: touch; scrollbar-width: none;"></div>
+        </section>
+
+        <!-- ══════════════════════════════
+             GRÁFICO IMC  ← NOVO
+        ══════════════════════════════ -->
+        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider">📊 Evolução do IMC</h2>
+                <div class="text-right">
+                    <span id="imcAtualLabel" class="text-base font-black text-white">--</span>
+                    <span id="imcClasseLabel" class="text-[10px] font-bold text-emerald-400 block">--</span>
+                </div>
+            </div>
+            <div class="flex gap-1.5 flex-wrap">
+                <span class="text-[9px] px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300 font-bold">Abaixo &lt;18.5</span>
+                <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold">Normal 18.5–25</span>
+                <span class="text-[9px] px-2 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 font-bold">Sobrepeso 25–30</span>
+                <span class="text-[9px] px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 font-bold">Obeso &gt;30</span>
+            </div>
+            <div style="height: 180px;"><canvas id="graficoIMC"></canvas></div>
+        </section>
+
+        <!-- ══════════════════════════════
+             SINTOMAS × DIA PÓS-DOSE  ← NOVO
+        ══════════════════════════════ -->
+        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
+            <div class="flex items-center gap-2">
+                <span>🔬</span>
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider">Padrão de Sintomas</h2>
+                    <p class="text-[10px] text-slate-400">Correlação com o dia após a dose</p>
+                </div>
+            </div>
+            <div class="flex gap-1 overflow-x-auto pb-1" id="tabsSintoma">
+                <button onclick="mostrarDiaSintoma(1)" data-dia="1" class="tab-btn active flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+1</button>
+                <button onclick="mostrarDiaSintoma(2)" data-dia="2" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+2</button>
+                <button onclick="mostrarDiaSintoma(3)" data-dia="3" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+3</button>
+                <button onclick="mostrarDiaSintoma(4)" data-dia="4" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+4</button>
+                <button onclick="mostrarDiaSintoma(5)" data-dia="5" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+5</button>
+                <button onclick="mostrarDiaSintoma(6)" data-dia="6" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+6</button>
+                <button onclick="mostrarDiaSintoma(7)" data-dia="7" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+7</button>
+            </div>
+            <div id="painelSintoma" class="space-y-2 min-h-[40px]"></div>
+            <div id="insightSintoma" class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3 py-2.5 text-xs text-indigo-300 hidden">
+                <span class="font-bold">💡 Insight: </span><span id="txtInsight"></span>
+            </div>
+            <div class="bg-slate-900/50 rounded-xl p-2.5 border border-slate-800">
+                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-2">Mapa de Intensidade Semanal</p>
+                <div id="mapaCalor" class="grid grid-cols-7 gap-1"></div>
+                <div class="flex justify-between mt-1 text-[8px] text-slate-600 font-bold px-0.5">
+                    <span>D+1</span><span>D+2</span><span>D+3</span><span>D+4</span><span>D+5</span><span>D+6</span><span>D+7</span>
+                </div>
+            </div>
         </section>
 
         <!-- ══════════════════════════════
@@ -525,15 +610,8 @@
                 <div class="relative flex-shrink-0 w-24 h-24">
                     <svg viewBox="0 0 80 80" class="w-full h-full -rotate-90">
                         <circle cx="40" cy="40" r="32" fill="none" stroke="#1e293b" stroke-width="8"/>
-                        <circle id="anelMeta" cx="40" cy="40" r="32" fill="none" stroke="url(#gradMeta)"
-                            stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"
-                            style="transition: stroke-dashoffset 0.8s ease"/>
-                        <defs>
-                            <linearGradient id="gradMeta" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stop-color="#10b981"/>
-                                <stop offset="100%" stop-color="#2dd4bf"/>
-                            </linearGradient>
-                        </defs>
+                        <circle id="anelMeta" cx="40" cy="40" r="32" fill="none" stroke="url(#gradMeta)" stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201" style="transition: stroke-dashoffset 0.8s ease"/>
+                        <defs><linearGradient id="gradMeta" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#2dd4bf"/></linearGradient></defs>
                     </svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center">
                         <span id="txtPorcentagemMeta" class="text-xl font-black text-white leading-none">0%</span>
@@ -542,47 +620,28 @@
                 </div>
                 <div class="flex-1 space-y-2">
                     <div class="flex justify-between items-center bg-slate-900/60 rounded-xl px-3 py-2 border border-slate-800">
-                        <div>
-                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Peso Inicial</span>
-                            <span id="txtPesoInicialMeta" class="text-sm font-black text-slate-300">-- kg</span>
-                        </div>
+                        <div><span class="text-[9px] text-slate-500 uppercase font-bold block">Peso Inicial</span><span id="txtPesoInicialMeta" class="text-sm font-black text-slate-300">-- kg</span></div>
                         <span class="text-slate-600 text-lg">→</span>
-                        <div class="text-right">
-                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Meta</span>
-                            <span id="txtPesoAlvoMeta" class="text-sm font-black text-rose-400">-- kg</span>
-                        </div>
+                        <div class="text-right"><span class="text-[9px] text-slate-500 uppercase font-bold block">Meta</span><span id="txtPesoAlvoMeta" class="text-sm font-black text-rose-400">-- kg</span></div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <div class="bg-slate-900/60 rounded-xl px-2.5 py-2 border border-emerald-900/40">
-                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Perdido</span>
-                            <span id="lblKgPerdidoMeta" class="text-sm font-black text-emerald-400">-- kg</span>
-                        </div>
-                        <div class="bg-slate-900/60 rounded-xl px-2.5 py-2 border border-slate-800">
-                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Falta perder</span>
-                            <span id="lblKgFaltaMeta" class="text-sm font-black text-amber-400">-- kg</span>
-                        </div>
+                        <div class="bg-slate-900/60 rounded-xl px-2.5 py-2 border border-emerald-900/40"><span class="text-[9px] text-slate-500 uppercase font-bold block">Perdido</span><span id="lblKgPerdidoMeta" class="text-sm font-black text-emerald-400">-- kg</span></div>
+                        <div class="bg-slate-900/60 rounded-xl px-2.5 py-2 border border-slate-800"><span class="text-[9px] text-slate-500 uppercase font-bold block">Falta perder</span><span id="lblKgFaltaMeta" class="text-sm font-black text-amber-400">-- kg</span></div>
                     </div>
                 </div>
             </div>
             <div class="space-y-1">
                 <div class="relative w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-slate-800">
                     <div id="barraMeta" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full w-0 transition-all duration-700 rounded-full"></div>
-                    <div class="absolute top-0 h-full w-px bg-slate-700" style="left:25%"></div>
-                    <div class="absolute top-0 h-full w-px bg-slate-700" style="left:50%"></div>
-                    <div class="absolute top-0 h-full w-px bg-slate-700" style="left:75%"></div>
-                </div>
-                <div class="flex justify-between text-[9px] text-slate-600 font-bold px-0.5">
-                    <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
                 </div>
             </div>
-            <div id="boxEstimativaMeta"
-                class="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3 py-2 text-[11px] text-indigo-300 hidden">
+            <div id="boxEstimativaMeta" class="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3 py-2 text-[11px] text-indigo-300 hidden">
                 <span>🗓️</span><span id="txtEstimativaMeta">--</span>
             </div>
         </section>
 
         <!-- ══════════════════════════════
-             GRÁFICO
+             GRÁFICO DE PESO
         ══════════════════════════════ -->
         <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
             <div class="flex justify-between items-center">
@@ -610,21 +669,21 @@
                     <span id="lblDataUltimaDose" class="text-[11px] font-black text-slate-300">--</span>
                 </div>
             </div>
-            <div id="listaRegistros" class="space-y-2 max-h-64 overflow-y-auto pr-0.5"
-                style="scrollbar-width: thin; scrollbar-color: #334155 transparent;"></div>
+            <div id="listaRegistros" class="space-y-2 max-h-64 overflow-y-auto pr-0.5" style="scrollbar-width: thin; scrollbar-color: #334155 transparent;"></div>
         </section>
 
     </main>
 </div>
 
 <!-- ══════════════════════════════════════════
-     JAVASCRIPT
+     JAVASCRIPT PRINCIPAL
 ═══════════════════════════════════════════ -->
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    /* ── Firebase Config ── */
     const firebaseConfig = {
         apiKey: "AIzaSyCXNvsYy0XyKazOxshcI5f2TtbpK3dVASI",
         authDomain: "mounjaro-tracker-a67c4.firebaseapp.com",
@@ -633,23 +692,23 @@
         messagingSenderId: "240121473217",
         appId: "1:240121473217:web:3c8db746886489736bcc40"
     };
-
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
+    /* ── Estado global ── */
     let usuarioAtual = null;
     let registros    = [];
     let configApp    = {
-        pesoInicial: null, pesoMeta: null,
-        ampolas: 1, doseAlvo: 2.5,
-        altura: null, idade: null,
-        sexo: 'M',          // ▸▸ NOVO
-        atividade: 1.2,     // ▸▸ NOVO
-        aguaLog: {}
+        pesoInicial: null, pesoMeta: null, ampolas: 1, doseAlvo: 2.5,
+        altura: null, idade: null, sexo: 'M', atividade: 1.2, aguaLog: {},
+        notifDose: true, notifAgua: true
     };
-    let chartInstance = null;
-    let doseTemporariaParaSalvar = null;
+    let chartInstance   = null;
+    let chartIMC        = null;
+    let doseParaSalvar  = null;
+    let dadosCorrelacao = {};
+    let listaProjecaoPontos = [];
 
     const listaMembrosRodizio = [
         { nome: 'Abdômen (Esquerdo)', sigla: 'Abd Esq' },
@@ -657,39 +716,174 @@
         { nome: 'Abdômen (Direito)',  sigla: 'Abd Dir' },
         { nome: 'Coxa Esquerda',      sigla: 'Cox Esq' }
     ];
+    const nomesAtividade = { '1.2':'Sedentário','1.375':'Lev. Ativo','1.55':'Moderado','1.725':'Muito Ativo','1.9':'Ext. Ativo' };
+    const tabelaUI = { 2.5:8, 5.0:16, 7.5:24, 10.0:32 };
+    function mgParaUI(mg) { const n=parseFloat(mg); return tabelaUI[n] ?? Math.round(n*3.2); }
+    function formatarDose(mgOuStr) { const n=parseFloat(mgOuStr); if(isNaN(n)) return String(mgOuStr); return `${n.toFixed(1)} mg • ${mgParaUI(n)} UI`; }
 
-    /* ── NOMES DOS NÍVEIS DE ATIVIDADE ── */
-    const nomesAtividade = {
-        '1.2':   'Sedentário',
-        '1.375': 'Lev. Ativo',
-        '1.55':  'Moderado',
-        '1.725': 'Muito Ativo',
-        '1.9':   'Ext. Ativo'
+    /* ══════════════════════════════
+       SERVICE WORKER
+    ══════════════════════════════ */
+    async function registrarSW() {
+        if (!('serviceWorker' in navigator)) return;
+        try {
+            const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            console.log('[App] SW registrado:', reg.scope);
+
+            /* Periodic Background Sync */
+            if ('periodicSync' in reg) {
+                const status = await navigator.permissions.query({ name: 'periodic-background-sync' });
+                if (status.state === 'granted') {
+                    await reg.periodicSync.register('verificar-lembretes-diarios', { minInterval: 24 * 60 * 60 * 1000 });
+                }
+            }
+
+            /* Mensagens do SW → App */
+            navigator.serviceWorker.addEventListener('message', event => {
+                const { tipo, pendentes, ml } = event.data || {};
+                if (tipo === 'SYNC_PENDENTES' && pendentes?.length) {
+                    pendentes.forEach(d => registros.push(d));
+                    salvarDadosNuvem().then(() => atualizarTudo());
+                    mostrarToast(`✅ ${pendentes.length} dose(s) sincronizada(s)!`);
+                }
+                if (tipo === 'ADICIONAR_AGUA' && ml) {
+                    adicionarAgua(ml);
+                }
+                if (tipo === 'ABRIR_MODAL_DOSE') {
+                    const cal = document.getElementById('calendarioContainer');
+                    const btn = cal?.querySelector('button');
+                    if (btn) btn.click();
+                }
+            });
+
+            /* Ações do parâmetro URL ao abrir via notificação */
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('acao') === 'agua') {
+                const ml = parseInt(urlParams.get('ml')) || 500;
+                setTimeout(() => adicionarAgua(ml), 800);
+            }
+        } catch (err) {
+            console.error('[App] Erro ao registrar SW:', err);
+        }
+    }
+    registrarSW();
+
+    /* ══════════════════════════════
+       TOAST
+    ══════════════════════════════ */
+    function mostrarToast(msg, dur = 3000) {
+        const t = document.getElementById('swToast');
+        t.innerText = msg;
+        t.style.opacity = '1';
+        setTimeout(() => { t.style.opacity = '0'; }, dur);
+    }
+
+    /* ══════════════════════════════
+       NOTIFICAÇÕES
+    ══════════════════════════════ */
+    function verificarStatusNotificacoes() {
+        const statusEl = document.getElementById('notifStatus');
+        const btnAtiv  = document.getElementById('btnAtivNotif');
+        if (!('Notification' in window)) {
+            statusEl.innerText = '❌ Navegador não suporta notificações.';
+            btnAtiv.disabled   = true; return;
+        }
+        const p = Notification.permission;
+        if (p === 'granted') {
+            statusEl.innerHTML = '✅ <span style="color:#34d399;font-weight:700">Notificações ativas!</span>';
+            btnAtiv.innerText  = 'Reativar';
+        } else if (p === 'denied') {
+            statusEl.innerText = '🚫 Bloqueado nas configurações do navegador.';
+            btnAtiv.innerText  = 'Bloqueado';
+            btnAtiv.disabled   = true;
+        } else {
+            statusEl.innerText = '⏳ Clique em "Ativar" para receber lembretes.';
+        }
+    }
+
+    window.solicitarPermissaoNotif = async function() {
+        if (!('Notification' in window)) return;
+        const perm = await Notification.requestPermission();
+        verificarStatusNotificacoes();
+        if (perm === 'granted') {
+            mostrarToast('🔔 Notificações ativadas!');
+            sincronizarConfigComSW();
+        }
     };
 
-    /* ════════════════════════════
-       HELPER: mg → UI na seringa
-       Tabela confirmada pelo usuário:
-         2.5mg = 8UI | 5mg = 16UI | 7.5mg = 24UI | 10mg = 32UI
-    ═══════════════════════════ */
-    const tabelaUI = { 2.5: 8, 5.0: 16, 7.5: 24, 10.0: 32 };
+    window.testarNotificacao = function() {
+        if (Notification.permission !== 'granted') { alert('Ative as notificações primeiro.'); return; }
+        new Notification('💉 Mounjaro Tracker', {
+            body:    'Lembrete: Amanhã é dia da sua próxima dose! Separe a seringa.',
+            icon:    '/icons/icon-192.png',
+            tag:     'dose-teste',
+            renotify: true,
+            vibrate: [200,100,200]
+        });
+        setTimeout(() => new Notification('💧 Hidratação', {
+            body:  'Você ainda não atingiu sua meta de hidratação hoje!',
+            icon:  '/icons/icon-192.png',
+            tag:   'agua-teste'
+        }), 1500);
+    };
 
-    function mgParaUI(mg) {
-        const n = parseFloat(mg);
-        return tabelaUI[n] ?? Math.round(n * 3.2);
+    window.salvarPrefNotif = function() {
+        configApp.notifDose = document.getElementById('toggleNotifDose').checked;
+        configApp.notifAgua = document.getElementById('toggleNotifAgua').checked;
+        salvarDadosNuvem();
+        sincronizarConfigComSW();
+    };
+
+    /* Envia config atualizada para o SW via postMessage */
+    function sincronizarConfigComSW() {
+        if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
+        const crono      = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
+        const pesoAtual  = crono.length > 0 ? crono[crono.length-1].peso : (configApp.pesoInicial || 80);
+        const ultima     = crono.length > 0 ? new Date(crono[crono.length-1].dataRaw + 'T12:00:00') : new Date();
+        const proxDose   = new Date(ultima.getTime() + 7*24*60*60*1000);
+        navigator.serviceWorker.controller.postMessage({
+            tipo: 'ATUALIZAR_CONFIG',
+            dados: {
+                notifDose:      configApp.notifDose !== false,
+                notifAgua:      configApp.notifAgua !== false,
+                doseAlvo:       configApp.doseAlvo,
+                proximaDoseISO: proxDose.toISOString(),
+                pesoAtual,
+                aguaLog:        configApp.aguaLog || {}
+            }
+        });
     }
 
-    /** Formata exibição: "2.5 mg • 8 UI" */
-    function formatarDose(mgOuStr) {
-        const n = parseFloat(mgOuStr);
-        if (isNaN(n)) return String(mgOuStr);
-        const ui = mgParaUI(n);
-        return `${n.toFixed(1)} mg • ${ui} UI`;
+    /* Verifica lembrete de água às 18h (enquanto app estiver aberto) */
+    function agendarVerificacaoAgua() {
+        const agora  = new Date();
+        const hora18 = new Date(); hora18.setHours(18,0,0,0);
+        let diff = hora18 - agora;
+        if (diff < 0) diff += 24*60*60*1000;
+        setTimeout(() => {
+            if (Notification.permission !== 'granted') return;
+            if (!configApp.notifAgua) return;
+            const hoje    = obterChaveDataHoje();
+            const tomado  = configApp.aguaLog?.[hoje] || 0;
+            const crono   = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
+            const pesoRef = crono.length > 0 ? crono[crono.length-1].peso : (configApp.pesoInicial || 80);
+            const meta    = Math.round(pesoRef * 35);
+            if (tomado < meta) {
+                new Notification('💧 Meta de hidratação!', {
+                    body:    `Faltam ${((meta-tomado)/1000).toFixed(1)}L para atingir sua meta hoje!`,
+                    icon:    '/icons/icon-192.png',
+                    tag:     'agua-18h',
+                    renotify: true
+                });
+            }
+            agendarVerificacaoAgua();
+        }, diff);
     }
+    agendarVerificacaoAgua();
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        AUTH
-    ═══════════════════════════ */
+    ══════════════════════════════ */
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             usuarioAtual = user;
@@ -697,6 +891,9 @@
             document.getElementById('conteudoApp').classList.remove('hidden');
             document.getElementById('lblUserEmail').innerText = user.email;
             await carregarDadosNuvem();
+            verificarStatusNotificacoes();
+            document.getElementById('toggleNotifDose').checked = configApp.notifDose !== false;
+            document.getElementById('toggleNotifAgua').checked = configApp.notifAgua !== false;
         } else {
             usuarioAtual = null;
             document.getElementById('telaLogin').classList.remove('hidden');
@@ -708,7 +905,6 @@
         const inp = document.getElementById('loginSenha');
         inp.type = inp.type === 'password' ? 'text' : 'password';
     };
-
     window.fazerLogin = function() {
         const email = document.getElementById('loginEmail').value;
         const senha = document.getElementById('loginSenha').value;
@@ -716,48 +912,45 @@
             .then(() => signInWithEmailAndPassword(auth, email, senha))
             .catch(err => alert(`Erro: ${err.message}`));
     };
-
     window.fazerLogout = function() { signOut(auth); };
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        FIRESTORE
-    ═══════════════════════════ */
+    ══════════════════════════════ */
     async function carregarDadosNuvem() {
         if (!usuarioAtual) return;
         try {
-            const docRef  = doc(db, "usuarios", usuarioAtual.uid);
-            const docSnap = await getDoc(docRef);
+            const docSnap = await getDoc(doc(db, "usuarios", usuarioAtual.uid));
             if (docSnap.exists()) {
                 const dados = docSnap.data();
                 registros = dados.registros || [];
-                configApp = {
-                    pesoInicial: null, pesoMeta: null,
-                    ampolas: 1, doseAlvo: 2.5,
-                    altura: null, idade: null,
-                    sexo: 'M', atividade: 1.2,
-                    aguaLog: {},
-                    ...dados.configApp
-                };
-                if (!configApp.aguaLog)  configApp.aguaLog  = {};
-                if (!configApp.sexo)     configApp.sexo     = 'M';
+                configApp = { pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,aguaLog:{},notifDose:true,notifAgua:true, ...dados.configApp };
+                if (!configApp.aguaLog)   configApp.aguaLog   = {};
+                if (!configApp.sexo)      configApp.sexo      = 'M';
                 if (!configApp.atividade) configApp.atividade = 1.2;
             } else {
                 await salvarDadosNuvem();
             }
             atualizarTudo();
-        } catch (err) { console.error(err); }
+            sincronizarConfigComSW();
+        } catch(err) { console.error(err); }
     }
 
+    let _salvarTimer = null;
     async function salvarDadosNuvem() {
         if (!usuarioAtual) return;
-        try {
-            await setDoc(doc(db, "usuarios", usuarioAtual.uid), { registros, configApp });
-        } catch (err) { alert("Erro ao salvar: " + err.message); }
+        clearTimeout(_salvarTimer);
+        _salvarTimer = setTimeout(async () => {
+            try {
+                await setDoc(doc(db,"usuarios",usuarioAtual.uid), { registros, configApp });
+                sincronizarConfigComSW();
+            } catch(err) { alert("Erro ao salvar: " + err.message); }
+        }, 600);
     }
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        MODAL CONFIG
-    ═══════════════════════════ */
+    ══════════════════════════════ */
     window.toggleConfigModal = function() {
         const modal = document.getElementById('modalConfig');
         modal.classList.toggle('hidden');
@@ -772,7 +965,6 @@
             document.getElementById('configAtividade').value   = configApp.atividade || 1.2;
         }
     };
-
     window.salvarConfiguracoes = function() {
         configApp.pesoInicial = parseFloat(document.getElementById('configPesoInicial').value) || null;
         configApp.pesoMeta    = parseFloat(document.getElementById('configPesoMeta').value)    || null;
@@ -780,29 +972,26 @@
         configApp.doseAlvo    = parseFloat(document.getElementById('configDoseAlvo').value)    || 2.5;
         configApp.altura      = parseInt(document.getElementById('configAltura').value)         || null;
         configApp.idade       = parseInt(document.getElementById('configIdade').value)          || null;
-        configApp.sexo        = document.getElementById('configSexo').value;                    // ▸▸ NOVO
-        configApp.atividade   = parseFloat(document.getElementById('configAtividade').value) || 1.2; // ▸▸ NOVO
-
+        configApp.sexo        = document.getElementById('configSexo').value;
+        configApp.atividade   = parseFloat(document.getElementById('configAtividade').value)   || 1.2;
         toggleConfigModal();
         salvarDadosNuvem().then(() => atualizarTudo());
     };
-
     window.deletarRegistroUnico = async function(id) {
-        if (confirm("Tem certeza que deseja apagar este registro?")) {
+        if (confirm("Apagar este registro?")) {
             registros = registros.filter(r => r.id !== id);
             await salvarDadosNuvem();
             atualizarTudo();
         }
     };
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        ÁGUA
-    ═══════════════════════════ */
+    ══════════════════════════════ */
     function obterChaveDataHoje() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
-
     window.adicionarAgua = async function(ml) {
         const hoje = obterChaveDataHoje();
         if (!configApp.aguaLog) configApp.aguaLog = {};
@@ -810,7 +999,6 @@
         await salvarDadosNuvem();
         processarPainelAgua();
     };
-
     window.resetarAguaManual = async function() {
         const hoje = obterChaveDataHoje();
         if (!configApp.aguaLog) configApp.aguaLog = {};
@@ -818,715 +1006,536 @@
         await salvarDadosNuvem();
         processarPainelAgua();
     };
-
     function processarPainelAgua() {
-        const crono = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
-        let pesoRef = configApp.pesoInicial || 80;
+        const crono   = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
+        let pesoRef   = configApp.pesoInicial || 80;
         if (crono.length > 0) pesoRef = crono[crono.length-1].peso;
-
         const metaMl   = Math.round(pesoRef * 35);
         const hoje     = obterChaveDataHoje();
         const tomado   = configApp.aguaLog ? (configApp.aguaLog[hoje] || 0) : 0;
         const restante = Math.max(0, metaMl - tomado);
         const atingida = tomado >= metaMl;
         const pct      = Math.min(100, Math.round((tomado / metaMl) * 100)) || 0;
-
-        document.getElementById('lblMetaAguaCalculada').innerText  = `${(metaMl/1000).toFixed(2)} L`;
-        document.getElementById('lblMetaAguaRestante').innerText   = atingida ? '0 L ✅' : `${(restante/1000).toFixed(2)} L`;
+        document.getElementById('lblMetaAguaCalculada').innerText   = `${(metaMl/1000).toFixed(2)} L`;
+        document.getElementById('lblMetaAguaRestante').innerText    = atingida ? '0 L ✅' : `${(restante/1000).toFixed(2)} L`;
         document.getElementById('lblAguaTomadaAcumulada').innerText = `${tomado} ml`;
-        document.getElementById('barraAguaProgresso').style.width  = `${pct}%`;
-        document.getElementById('lblPorcentagemAgua').innerText    = `${pct}%`;
-
-        const circ   = 201;
-        const offset = circ - (pct/100)*circ;
-        const anel   = document.getElementById('anelAgua');
-        if (anel) anel.style.strokeDashoffset = offset;
-
+        document.getElementById('barraAguaProgresso').style.width   = `${pct}%`;
+        document.getElementById('lblPorcentagemAgua').innerText     = `${pct}%`;
+        const anel = document.getElementById('anelAgua');
+        if (anel) anel.style.strokeDashoffset = 201 - (pct/100)*201;
         const box = document.getElementById('boxStatusAgua');
-        atingida ? (box.classList.remove('hidden'), box.classList.add('flex'))
-                 : (box.classList.add('hidden'),    box.classList.remove('flex'));
+        atingida ? (box.classList.remove('hidden'),box.classList.add('flex')) : (box.classList.add('hidden'),box.classList.remove('flex'));
     }
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        DOSE HISTÓRICA
-    ═══════════════════════════ */
+    ══════════════════════════════ */
     window.inserirDoseHistorica = async function() {
         const dataS  = document.getElementById('histData').value;
         const pesoS  = parseFloat(document.getElementById('histPeso').value);
         const doseS  = document.getElementById('histDose').value;
         const localS = document.getElementById('histLocal').value;
         if (!dataS || !pesoS) { alert("Preencha data e peso."); return; }
-        registros.push({
-            id: Date.now(),
-            dataRaw: dataS,
-            dataFormatada: `${dataS.split('-')[2]}/${dataS.split('-')[1]}`,
-            peso: pesoS, dose: doseS, local: localS, sintoma: "Sem Sintomas"
-        });
+        registros.push({ id:Date.now(), dataRaw:dataS, dataFormatada:`${dataS.split('-')[2]}/${dataS.split('-')[1]}`, peso:pesoS, dose:doseS, local:localS, sintoma:"Sem Sintomas" });
         document.getElementById('histData').value = '';
         document.getElementById('histPeso').value = '';
         await salvarDadosNuvem();
         atualizarTudo();
     };
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        MODAL RÁPIDO
-    ═══════════════════════════ */
+    ══════════════════════════════ */
     window.abrirModalRegistroRapido = function(numSem, dataRaw, local, pesoPrevisto) {
-        doseTemporariaParaSalvar = { semana: numSem, dataRaw, local };
-        document.getElementById('txtSubtituloModalRapido').innerText  = `Semana ${numSem} • ${dataRaw.split('-')[2]}/${dataRaw.split('-')[1]} • ${formatarDose(configApp.doseAlvo)}`;
-        document.getElementById('txtPrevisaoModalRapido').innerText   = `📉 Peso previsto: ${pesoPrevisto} kg`;
-        document.getElementById('inputPesoRapido').value              = pesoPrevisto;
+        doseParaSalvar = { semana:numSem, dataRaw, local };
+        document.getElementById('txtSubtituloModalRapido').innerText = `Semana ${numSem} • ${dataRaw.split('-')[2]}/${dataRaw.split('-')[1]} • ${formatarDose(configApp.doseAlvo)}`;
+        document.getElementById('txtPrevisaoModalRapido').innerText  = `📉 Peso previsto: ${pesoPrevisto} kg`;
+        document.getElementById('inputPesoRapido').value             = pesoPrevisto;
         document.getElementById('modalLancamentoRapido').classList.remove('hidden');
     };
-
     window.fecharModalRapido = function() { document.getElementById('modalLancamentoRapido').classList.add('hidden'); };
-
     window.confirmarInjecaoRapida = async function() {
         const peso    = parseFloat(document.getElementById('inputPesoRapido').value);
         const sintoma = document.getElementById('inputSintomaRapido').value;
         if (!peso) return;
-        registros.push({
-            id: Date.now(),
-            dataRaw: doseTemporariaParaSalvar.dataRaw,
-            dataFormatada: `${doseTemporariaParaSalvar.dataRaw.split('-')[2]}/${doseTemporariaParaSalvar.dataRaw.split('-')[1]}`,
-            peso, dose: configApp.doseAlvo + " mg", doseUI: mgParaUI(configApp.doseAlvo),
-            local: doseTemporariaParaSalvar.local, sintoma
-        });
+        const novaReg = { id:Date.now(), dataRaw:doseParaSalvar.dataRaw, dataFormatada:`${doseParaSalvar.dataRaw.split('-')[2]}/${doseParaSalvar.dataRaw.split('-')[1]}`, peso, dose:configApp.doseAlvo+" mg", doseUI:mgParaUI(configApp.doseAlvo), local:doseParaSalvar.local, sintoma };
+        registros.push(novaReg);
         fecharModalRapido();
         await salvarDadosNuvem();
         atualizarTudo();
+        mostrarToast('💉 Dose registrada!');
+        /* Background sync — salva offline se sem conexão */
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+            const reg = await navigator.serviceWorker.ready;
+            await reg.sync.register('sync-doses').catch(()=>{});
+        }
     };
 
-    /* ════════════════════════════════════════════
-       ▸▸ CÁLCULOS METABÓLICOS CORRIGIDOS E COMPLETOS
-    ═══════════════════════════════════════════════
-
-       Mifflin-St Jeor:
-         Masc: TMB = 10×P + 6.25×H - 5×I + 5
-         Fem:  TMB = 10×P + 6.25×H - 5×I - 161
-
-       Proteína:
-         Masc: 1.6–2.0 g/kg  → usamos 1.8 g/kg
-         Fem:  1.4–1.8 g/kg  → usamos 1.6 g/kg
-
-       Água: 35 ml/kg (universal)
-    ═══════════════════════════════════════════════ */
+    /* ══════════════════════════════
+       METABOLISMO
+    ══════════════════════════════ */
     function calcularMetabolismo(pesoAtual, perdaSemanalMedia) {
-        const altura   = configApp.altura   || 170;
-        const idade    = configApp.idade    || 30;
-        const sexo     = configApp.sexo     || 'M';
+        const altura     = configApp.altura || 170;
+        const idade      = configApp.idade  || 30;
+        const sexo       = configApp.sexo   || 'M';
         const fAtividade = parseFloat(configApp.atividade) || 1.2;
+        const fatorSexo  = sexo === 'F' ? -161 : 5;
+        const tmb        = (10*pesoAtual) + (6.25*altura) - (5*idade) + fatorSexo;
+        const tdee       = tmb * fAtividade;
+        const deficitDia = (perdaSemanalMedia * 7700) / 7;
+        let   alvo       = Math.max(1200, tdee - deficitDia);
+        const proteina   = Math.round(pesoAtual * (sexo === 'F' ? 1.6 : 1.8));
+        const alturaM    = altura / 100;
+        const imc        = pesoAtual / (alturaM*alturaM);
 
-        /* ── TMB (Mifflin-St Jeor) ── */
-        const fatorSexo = sexo === 'F' ? -161 : 5;
-        const tmb = (10 * pesoAtual) + (6.25 * altura) - (5 * idade) + fatorSexo;
+        document.getElementById('nutriProteina').innerText      = `${proteina}g`;
+        document.getElementById('nutriTMB').innerText           = `${Math.round(tmb)} kcal`;
+        document.getElementById('nutriGastoTotal').innerText    = `${Math.round(tdee)} kcal`;
+        document.getElementById('nutriCaloriasAlvo').innerText  = `${Math.round(alvo)} kcal`;
+        document.getElementById('lblNivelAtividade').innerText  = nomesAtividade[String(fAtividade)] || 'Sedentário';
+        document.getElementById('badgePerfilMetabolico').innerText = `${sexo==='F'?'Feminino':'Masculino'} • ${nomesAtividade[String(fAtividade)]||'Sedentário'}`;
 
-        /* ── TDEE ── */
-        const tdee = tmb * fAtividade;
-
-        /* ── Déficit necessário p/ manter ritmo de perda ── */
-        const deficitDiario = (perdaSemanalMedia * 7700) / 7;
-
-        /* ── Alvo calórico (mínimo 1200 kcal) ── */
-        let alvo = tdee - deficitDiario;
-        if (alvo < 1200) alvo = 1200;
-
-        /* ── Proteína por sexo ── */
-        const fatorProteina = sexo === 'F' ? 1.6 : 1.8;
-        const proteina = Math.round(pesoAtual * fatorProteina);
-
-        /* ── IMC ── */
-        const alturaM = altura / 100;
-        const imc = pesoAtual / (alturaM * alturaM);
-
-        /* ── Atualizar DOM ── */
-        document.getElementById('nutriProteina').innerText   = `${proteina}g`;
-        document.getElementById('nutriTMB').innerText        = `${Math.round(tmb)} kcal`;
-        document.getElementById('nutriGastoTotal').innerText = `${Math.round(tdee)} kcal`;
-        document.getElementById('nutriCaloriasAlvo').innerText = `${Math.round(alvo)} kcal`;
-
-        const nomeFator = nomesAtividade[String(fAtividade)] || 'Sedentário';
-        document.getElementById('lblNivelAtividade').innerText = nomeFator;
-
-        /* Badge de perfil */
-        document.getElementById('badgePerfilMetabolico').innerText =
-            `${sexo === 'F' ? 'Feminino' : 'Masculino'} • ${nomeFator}`;
-
-        /* Déficit */
         const deficitReal = Math.round(tdee - alvo);
         document.getElementById('lblDeficitCalorico').innerText = `${deficitReal} kcal`;
-        const pctDeficit = Math.min(100, Math.round((deficitReal / 750) * 100));
-        document.getElementById('barraDeficit').style.width = `${pctDeficit}%`;
-        /* Cor da barra de déficit */
-        const barraD = document.getElementById('barraDeficit');
-        if (deficitReal < 300)       barraD.className = 'h-full bg-blue-500 w-0 transition-all duration-500 rounded-full';
-        else if (deficitReal <= 750) barraD.className = 'h-full bg-amber-500 w-0 transition-all duration-500 rounded-full';
-        else                         barraD.className = 'h-full bg-rose-500 w-0 transition-all duration-500 rounded-full';
-        setTimeout(() => { barraD.style.width = `${pctDeficit}%`; }, 50);
+        const pctD = Math.min(100,Math.round((deficitReal/750)*100));
+        const barD = document.getElementById('barraDeficit');
+        barD.className = `h-full w-0 transition-all duration-500 rounded-full ${deficitReal<300?'bg-blue-500':deficitReal<=750?'bg-amber-500':'bg-rose-500'}`;
+        setTimeout(()=>{ barD.style.width=`${pctD}%`; },50);
 
-        /* IMC */
         if (configApp.altura) {
             document.getElementById('boxIMC').classList.remove('hidden');
             document.getElementById('lblIMCValor').innerText = imc.toFixed(1);
-
-            const classeIMC = imc < 18.5 ? { txt: 'Abaixo do peso', cor: 'text-blue-400' }
-                : imc < 25 ? { txt: 'Peso normal ✅', cor: 'text-emerald-400' }
-                : imc < 30 ? { txt: 'Sobrepeso', cor: 'text-yellow-400' }
-                : imc < 35 ? { txt: 'Obesidade grau I', cor: 'text-orange-400' }
-                : imc < 40 ? { txt: 'Obesidade grau II', cor: 'text-rose-400' }
-                :            { txt: 'Obesidade grau III', cor: 'text-red-600' };
-
-            const lblClasse = document.getElementById('lblClasseIMC');
-            lblClasse.innerText   = classeIMC.txt;
-            lblClasse.className   = `text-[9px] text-center font-bold mt-1 ${classeIMC.cor}`;
-
-            /* Posição do marcador na régua (IMC 16→40 = escala 0→100%) */
-            const imcMin = 16, imcMax = 40;
-            const posicao = Math.min(100, Math.max(0, ((imc - imcMin) / (imcMax - imcMin)) * 100));
-            document.getElementById('marcadorIMC').style.left = `${posicao}%`;
+            const cl = imc<18.5?{txt:'Abaixo do peso',cor:'text-blue-400'}:imc<25?{txt:'Peso normal ✅',cor:'text-emerald-400'}:imc<30?{txt:'Sobrepeso',cor:'text-yellow-400'}:imc<35?{txt:'Obesidade G.I',cor:'text-orange-400'}:imc<40?{txt:'Obesidade G.II',cor:'text-rose-400'}:{txt:'Obesidade G.III',cor:'text-red-600'};
+            const lblC = document.getElementById('lblClasseIMC');
+            lblC.innerText = cl.txt; lblC.className = `text-[9px] text-center font-bold mt-1 ${cl.cor}`;
+            const pos = Math.min(100,Math.max(0,((imc-16)/(40-16))*100));
+            document.getElementById('marcadorIMC').style.left = `${pos}%`;
         }
 
-        /* Alerta clínico */
         const alertaBox = document.getElementById('boxAlertaClinico');
         if (perdaSemanalMedia > 1.5) {
-            alertaBox.innerHTML = `<span>⚠️</span> Perda muito rápida (${perdaSemanalMedia.toFixed(2)} kg/sem). Priorize ingerir ${proteina}g de proteína para preservar massa magra.`;
+            alertaBox.innerHTML = `<span>⚠️</span> Perda muito rápida (${perdaSemanalMedia.toFixed(2)} kg/sem). Priorize ${proteina}g de proteína para preservar massa magra.`;
             alertaBox.classList.remove('hidden');
-        } else {
-            alertaBox.classList.add('hidden');
+        } else { alertaBox.classList.add('hidden'); }
+    }
+
+    /* ══════════════════════════════
+       NOTA DE DESEMPENHO
+    ══════════════════════════════ */
+    const ESCALA_NOTAS = [
+        { nota:'S+', min:1.00, max:Infinity, cor:'#10b981', desc:'Excepcional',       detalhe:'Você está no top 5% dos estudos clínicos. Resultado extraordinário!' },
+        { nota:'S',  min:0.75, max:1.00,     cor:'#34d399', desc:'Ótimo',             detalhe:'Acima do top 10% do SURMOUNT. Excelente progresso!' },
+        { nota:'A',  min:0.55, max:0.75,     cor:'#2dd4bf', desc:'Acima da média',    detalhe:'Você está superando a média dos estudos clínicos. Ótimo trabalho!' },
+        { nota:'B',  min:0.35, max:0.55,     cor:'#818cf8', desc:'Na média clínica',  detalhe:'Dentro da faixa esperada do Mounjaro (~0.52 kg/sem no SURMOUNT-1).' },
+        { nota:'C',  min:0.20, max:0.35,     cor:'#fbbf24', desc:'Abaixo da média',   detalhe:'Abaixo da média clínica. Revise dieta e exercício com seu médico.' },
+        { nota:'D',  min:0,    max:0.20,     cor:'#f43f5e', desc:'Consulte seu médico',detalhe:'Perda muito baixa. Pode indicar necessidade de ajuste de dose.' },
+    ];
+
+    function atualizarNota() {
+        const crono = [...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
+        if (crono.length < 2 || !configApp.pesoInicial) return;
+        const pesoAtual  = crono[crono.length-1].peso;
+        const semanas    = (new Date(crono[crono.length-1].dataRaw)-new Date(crono[0].dataRaw))/(1000*60*60*24*7);
+        const perdaTotal = configApp.pesoInicial - pesoAtual;
+        const mediaSem   = Math.max(0, semanas > 0 ? perdaTotal/semanas : 0);
+        const nota       = ESCALA_NOTAS.find(e=>mediaSem>=e.min && mediaSem<e.max) || ESCALA_NOTAS[ESCALA_NOTAS.length-1];
+
+        document.getElementById('notaLetra').innerText       = nota.nota;
+        document.getElementById('notaLetra').style.color     = nota.cor;
+        document.getElementById('notaDescricao').innerText   = nota.desc;
+        document.getElementById('notaDescricao').style.color = nota.cor;
+        document.getElementById('notaDetalhe').innerText     = nota.detalhe;
+        document.getElementById('txtSuaMediaNota').innerText = `${mediaSem.toFixed(2)} kg/sem`;
+        document.getElementById('txtSuaMediaNota').style.color = nota.cor;
+        const boxNota = document.getElementById('boxNota');
+        boxNota.style.borderColor = nota.cor+'40';
+        boxNota.style.background  = nota.cor+'10';
+        const pct = Math.min(100, Math.round((mediaSem/1.0)*100));
+        const barVoce = document.getElementById('barraVoceNota');
+        barVoce.style.background = `linear-gradient(to right, ${nota.cor}, ${nota.cor}99)`;
+        setTimeout(()=>{ barVoce.style.width=`${pct}%`; },100);
+    }
+
+    /* ══════════════════════════════
+       GRÁFICO IMC
+    ══════════════════════════════ */
+    function calcularIMCValor(peso) {
+        const h = (configApp.altura||170)/100;
+        return peso/(h*h);
+    }
+    function corIMC(imc) {
+        if (imc<18.5) return '#60a5fa';
+        if (imc<25)   return '#34d399';
+        if (imc<30)   return '#fbbf24';
+        if (imc<35)   return '#fb923c';
+        return '#f43f5e';
+    }
+    function classeTextoIMC(imc) {
+        if (imc<18.5) return 'Abaixo do peso';
+        if (imc<25)   return 'Peso normal';
+        if (imc<30)   return 'Sobrepeso';
+        if (imc<35)   return 'Obeso G.I';
+        if (imc<40)   return 'Obeso G.II';
+        return 'Obeso G.III';
+    }
+    function atualizarGraficoIMC() {
+        const crono  = [...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
+        const labels = [], valores = [], cores = [];
+        if (configApp.pesoInicial) {
+            const imc = calcularIMCValor(configApp.pesoInicial);
+            labels.push('Início'); valores.push(parseFloat(imc.toFixed(1))); cores.push(corIMC(imc));
+        }
+        crono.forEach(r => {
+            const imc = calcularIMCValor(r.peso);
+            labels.push(`${r.dataRaw.split('-')[2]}/${r.dataRaw.split('-')[1]}`);
+            valores.push(parseFloat(imc.toFixed(1)));
+            cores.push(corIMC(imc));
+        });
+        if (valores.length > 0) {
+            const ultimo = valores[valores.length-1];
+            document.getElementById('imcAtualLabel').innerText   = ultimo.toFixed(1);
+            document.getElementById('imcClasseLabel').innerText  = classeTextoIMC(ultimo);
+            document.getElementById('imcClasseLabel').style.color = corIMC(ultimo);
+        }
+        if (chartIMC) chartIMC.destroy();
+        if (labels.length < 1) return;
+        const ctx = document.getElementById('graficoIMC').getContext('2d');
+        chartIMC = new Chart(ctx, {
+            type:'line',
+            data:{ labels, datasets:[{ label:'IMC', data:valores, borderColor:'#818cf8', borderWidth:2.5, backgroundColor:'rgba(99,102,241,.1)', fill:true, pointRadius:5, pointHoverRadius:7, pointBackgroundColor:cores, pointBorderColor:'#0f172a', pointBorderWidth:2, tension:0.35 }]},
+            options:{ responsive:true, maintainAspectRatio:false,
+                plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#1e293b', borderColor:'#334155', borderWidth:1, titleColor:'#94a3b8', bodyColor:'#f1f5f9', padding:10,
+                    callbacks:{ afterLabel: ctx => classeTextoIMC(ctx.parsed.y) }}},
+                scales:{ x:{grid:{color:'rgba(51,65,85,.5)'},ticks:{color:'#64748b',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:8}}, y:{grid:{color:'rgba(51,65,85,.4)'},ticks:{color:'#64748b',font:{size:10},callback:v=>`${v}`},title:{display:true,text:'IMC',color:'#64748b',font:{size:10}}} }
+            }
+        });
+    }
+
+    /* ══════════════════════════════
+       CORRELAÇÃO SINTOMAS
+    ══════════════════════════════ */
+    const sintomaScore = { 'Sem Sintomas':0,'Muita Saciedade':1,'Fadiga':2,'Constipação':2,'Náusea Leve':3 };
+    const sintomaEmoji = { 'Sem Sintomas':'✅','Muita Saciedade':'😶','Fadiga':'😴','Constipação':'😣','Náusea Leve':'🤢' };
+    const sintomaCorMap = {
+        0:{ bg:'bg-emerald-500/15',border:'border-emerald-500/25',text:'text-emerald-300',bar:'bg-emerald-500' },
+        1:{ bg:'bg-blue-500/15',   border:'border-blue-500/25',   text:'text-blue-300',   bar:'bg-blue-400'    },
+        2:{ bg:'bg-amber-500/15',  border:'border-amber-500/25',  text:'text-amber-300',  bar:'bg-amber-500'   },
+        3:{ bg:'bg-rose-500/15',   border:'border-rose-500/25',   text:'text-rose-300',   bar:'bg-rose-500'    },
+    };
+
+    function calcularCorrelacaoSintomas() {
+        const crono = [...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
+        const res = {}; for(let d=1;d<=7;d++) res[d]=[];
+        crono.forEach((reg,idx)=>{
+            if(idx===0) return;
+            const diff = Math.round((new Date(reg.dataRaw)-new Date(crono[idx-1].dataRaw))/(1000*60*60*24));
+            if(diff>=1 && diff<=7) res[diff].push({ sintoma:reg.sintoma||'Sem Sintomas', dataRaw:reg.dataRaw });
+        });
+        return res;
+    }
+
+    window.mostrarDiaSintoma = function(dia) {
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelector(`.tab-btn[data-dia="${dia}"]`)?.classList.add('active');
+        const painel = document.getElementById('painelSintoma');
+        const dados  = dadosCorrelacao[dia] || [];
+        if (dados.length === 0) {
+            painel.innerHTML = `<div class="text-center py-3 text-slate-500 text-xs">Sem registros para D+${dia}</div>`;
+            document.getElementById('insightSintoma').classList.add('hidden');
+            return;
+        }
+        const contagem = {};
+        dados.forEach(d=>{ contagem[d.sintoma]=(contagem[d.sintoma]||0)+1; });
+        const total  = dados.length;
+        const sorted = Object.entries(contagem).sort((a,b)=>b[1]-a[1]);
+        painel.innerHTML = '';
+        sorted.forEach(([sint,count])=>{
+            const pct   = Math.round((count/total)*100);
+            const score = sintomaScore[sint]??1;
+            const cor   = sintomaCorMap[score]||sintomaCorMap[1];
+            const div   = document.createElement('div');
+            div.className = `${cor.bg} border ${cor.border} rounded-xl px-3 py-2`;
+            div.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-xs font-bold ${cor.text}">${sintomaEmoji[sint]||'•'} ${sint}</span><span class="text-[10px] font-black ${cor.text}">${count}x (${pct}%)</span></div><div class="w-full bg-slate-950/50 h-1.5 rounded-full overflow-hidden"><div class="${cor.bar} h-full rounded-full bar-anim" style="width:${pct}%"></div></div>`;
+            painel.appendChild(div);
+        });
+        const insight = document.getElementById('insightSintoma');
+        if (sorted[0] && sorted[0][0] !== 'Sem Sintomas') {
+            const pct = Math.round((sorted[0][1]/total)*100);
+            document.getElementById('txtInsight').innerText = `Em D+${dia}, você reportou "${sorted[0][0]}" em ${pct}% das doses. Considere isso ao planejar atividades nesse dia.`;
+            insight.classList.remove('hidden');
+        } else { insight.classList.add('hidden'); }
+    };
+
+    function renderizarMapaCalorSintomas() {
+        const mapa = document.getElementById('mapaCalor'); mapa.innerHTML='';
+        for(let d=1;d<=7;d++){
+            const dados = dadosCorrelacao[d]||[];
+            const cell  = document.createElement('div');
+            if (dados.length===0) {
+                cell.className='h-8 rounded-lg bg-slate-900/50 border border-slate-800/60 cursor-default';
+            } else {
+                const media = dados.reduce((a,d)=>a+(sintomaScore[d.sintoma]??0),0)/dados.length;
+                const cor   = media>=2.5?'bg-rose-500/50':media>=1.5?'bg-amber-500/45':media>=0.5?'bg-blue-500/40':'bg-emerald-500/40';
+                cell.className=`h-8 rounded-lg ${cor} border border-slate-700/30 flex items-center justify-center cursor-pointer`;
+                cell.innerHTML=`<span class="text-[8px] font-black text-white">${dados.length}</span>`;
+                cell.onclick=()=>mostrarDiaSintoma(d);
+            }
+            cell.title=`D+${d}: ${dados.length} registro(s)`;
+            mapa.appendChild(cell);
         }
     }
 
-    /* ════════════════════════════════════════════
-       ▸▸ ESTOQUE DE AMPOLAS — LÓGICA MELHORADA
-    ═══════════════════════════════════════════════ */
+    /* ══════════════════════════════
+       ESTOQUE DE AMPOLAS
+    ══════════════════════════════ */
     function calcularEstoqueAmpolas(cronologico) {
-        const totalAmpolas = configApp.ampolas || 1;
-
-        /* Inicializa todas as ampolas cheias (15mg) */
-        let vials = Array.from({ length: totalAmpolas }, (_, i) => ({
-            idx: i,
-            mgInicial: 15.0,
-            mgRestante: 15.0
-        }));
-
-        /* Abate as doses já aplicadas sequencialmente */
+        const total = configApp.ampolas || 1;
+        let vials = Array.from({length:total},(_,i)=>({idx:i,mgInicial:15.0,mgRestante:15.0}));
         cronologico.forEach(reg => {
-            let dose = parseFloat(reg.dose) || 2.5;
+            let dose = parseFloat(reg.dose)||2.5;
             for (let v of vials) {
-                if (v.mgRestante <= 0) continue;
-                if (v.mgRestante >= dose) {
-                    v.mgRestante -= dose;
-                    v.mgRestante  = parseFloat(v.mgRestante.toFixed(4));
-                    dose = 0;
-                    break;
-                } else {
-                    dose -= v.mgRestante;
-                    v.mgRestante = 0;
-                }
+                if (v.mgRestante<=0) continue;
+                if (v.mgRestante>=dose) { v.mgRestante=parseFloat((v.mgRestante-dose).toFixed(4)); dose=0; break; }
+                else { dose-=v.mgRestante; v.mgRestante=0; }
             }
         });
-
         return vials;
     }
-
     function renderizarEstoqueVisual(vials) {
-        const container = document.getElementById('containerAmpolasVisuais');
-        container.innerHTML = '';
-
-        const doseAlvo = configApp.doseAlvo;
+        const container = document.getElementById('containerAmpolasVisuais'); container.innerHTML='';
         let vialAtualIdx = -1;
-
-        vials.forEach((v, i) => {
-            const pct = Math.round((v.mgRestante / v.mgInicial) * 100);
-            const isEmpty   = v.mgRestante <= 0;
-            const isCritical = !isEmpty && pct < 20;
-            const isMedium   = !isEmpty && pct >= 20 && pct <= 50;
-
-            if (!isEmpty && vialAtualIdx === -1) vialAtualIdx = i;
-
-            /* Cor do líquido */
-            let corGrad = isEmpty ? 'from-slate-800 to-slate-700'
-                : isCritical ? 'from-rose-700 to-red-500'
-                : isMedium   ? 'from-amber-700 to-yellow-500'
-                :              'from-emerald-700 to-teal-400';
-
-            /* Doses restantes neste vial */
-            const dosesNeste = Math.floor(v.mgRestante / doseAlvo);
-
-            const div = document.createElement('div');
-            div.className = `flex flex-col items-center space-y-1 p-2 rounded-xl border text-center w-[72px]
-                ${isEmpty           ? 'bg-slate-950/40 border-slate-800/40 opacity-50'
-                : isCritical        ? 'bg-rose-950/30 border-rose-700/40 vial-critical'
-                : vialAtualIdx === i ? 'bg-indigo-950/40 border-indigo-500/30'
-                :                     'bg-slate-950/50 border-slate-800'}`;
-
-            div.innerHTML = `
-                <span class="text-[8px] font-bold uppercase ${vialAtualIdx === i ? 'text-indigo-300' : 'text-slate-500'}">
-                    Vial ${i+1}${vialAtualIdx === i ? ' ●' : ''}
-                </span>
-
-                <!-- Ampola visual -->
-                <div class="relative w-8 flex flex-col items-center">
-                    <!-- Tampa -->
-                    <div class="w-3 h-1.5 bg-slate-600 rounded-t-sm mb-0.5"></div>
-                    <!-- Corpo -->
-                    <div class="w-7 h-12 border-2 ${isCritical ? 'border-rose-600/60' : vialAtualIdx === i ? 'border-indigo-500/50' : 'border-slate-600/60'} rounded-lg relative overflow-hidden bg-slate-900 shadow-inner flex flex-col justify-end">
-                        <div class="w-full vial-fill bg-gradient-to-t ${corGrad}" style="height:${pct}%"></div>
-                        <span class="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white drop-shadow-md">${isEmpty ? '✗' : pct+'%'}</span>
-                    </div>
-                    <!-- Base -->
-                    <div class="w-8 h-1 bg-slate-700 rounded-b-sm mt-0.5"></div>
-                </div>
-
-                <span class="text-[9px] font-mono font-bold ${isCritical ? 'text-rose-300' : vialAtualIdx === i ? 'text-indigo-300' : 'text-slate-400'}">
-                    ${v.mgRestante.toFixed(1)}mg
-                </span>
-                <span class="text-[8px] ${isEmpty ? 'text-slate-600' : isCritical ? 'text-rose-400' : 'text-slate-500'}">
-                    ${isEmpty ? 'vazio' : dosesNeste === 0 ? '<1 dose' : dosesNeste + ' dose' + (dosesNeste > 1 ? 's' : '')}
-                </span>
-            `;
+        vials.forEach((v,i)=>{
+            const pct=Math.round((v.mgRestante/v.mgInicial)*100);
+            const isEmpty=v.mgRestante<=0,isCrit=!isEmpty&&pct<20,isMed=!isEmpty&&pct>=20&&pct<=50;
+            if(!isEmpty&&vialAtualIdx===-1) vialAtualIdx=i;
+            const corGrad=isEmpty?'from-slate-800 to-slate-700':isCrit?'from-rose-700 to-red-500':isMed?'from-amber-700 to-yellow-500':'from-emerald-700 to-teal-400';
+            const dosesNeste=Math.floor(v.mgRestante/configApp.doseAlvo);
+            const div=document.createElement('div');
+            div.className=`flex flex-col items-center space-y-1 p-2 rounded-xl border text-center w-[72px] ${isEmpty?'bg-slate-950/40 border-slate-800/40 opacity-50':isCrit?'bg-rose-950/30 border-rose-700/40 vial-critical':vialAtualIdx===i?'bg-indigo-950/40 border-indigo-500/30':'bg-slate-950/50 border-slate-800'}`;
+            div.innerHTML=`<span class="text-[8px] font-bold uppercase ${vialAtualIdx===i?'text-indigo-300':'text-slate-500'}">Vial ${i+1}${vialAtualIdx===i?' ●':''}</span><div class="relative w-8 flex flex-col items-center"><div class="w-3 h-1.5 bg-slate-600 rounded-t-sm mb-0.5"></div><div class="w-7 h-12 border-2 ${isCrit?'border-rose-600/60':vialAtualIdx===i?'border-indigo-500/50':'border-slate-600/60'} rounded-lg relative overflow-hidden bg-slate-900 shadow-inner flex flex-col justify-end"><div class="w-full vial-fill bg-gradient-to-t ${corGrad}" style="height:${pct}%"></div><span class="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white drop-shadow-md">${isEmpty?'✗':pct+'%'}</span></div><div class="w-8 h-1 bg-slate-700 rounded-b-sm mt-0.5"></div></div><span class="text-[9px] font-mono font-bold ${isCrit?'text-rose-300':vialAtualIdx===i?'text-indigo-300':'text-slate-400'}">${v.mgRestante.toFixed(1)}mg</span><span class="text-[8px] ${isEmpty?'text-slate-600':isCrit?'text-rose-400':'text-slate-500'}">${isEmpty?'vazio':dosesNeste===0?'<1 dose':dosesNeste+' dose'+(dosesNeste>1?'s':'')}</span>`;
             container.appendChild(div);
         });
-
         return { vials, vialAtualIdx };
     }
-
     function renderizarProjecaoVials(vials, vialAtualIdx) {
-        const container = document.getElementById('containerProjecaoVials');
-        container.innerHTML = '';
-
-        const doseAlvo = configApp.doseAlvo;
-        const vialsComDose = vials.filter(v => v.mgRestante > 0);
-        if (vialsComDose.length === 0) return;
-
-        const titulo = document.createElement('div');
-        titulo.className = 'text-[10px] text-slate-500 font-bold uppercase tracking-wider';
-        titulo.innerText = 'Projeção de uso por vial';
+        const container=document.getElementById('containerProjecaoVials'); container.innerHTML='';
+        const viaisComDose=vials.filter(v=>v.mgRestante>0);
+        if(viaisComDose.length===0) return;
+        const titulo=document.createElement('div');
+        titulo.className='text-[10px] text-slate-500 font-bold uppercase tracking-wider';
+        titulo.innerText='Projeção de uso por vial';
         container.appendChild(titulo);
-
-        vialsComDose.forEach(v => {
-            const doses     = Math.floor(v.mgRestante / doseAlvo);
-            const pct       = Math.round((v.mgRestante / v.mgInicial) * 100);
-            const isCurrent = v.idx === vialAtualIdx;
-            const isCrit    = pct < 20;
-
-            const row = document.createElement('div');
-            row.className = `flex items-center gap-2 ${isCurrent ? 'bg-indigo-950/30 border border-indigo-500/20' : 'bg-slate-900/40 border border-slate-800'} rounded-xl px-3 py-2`;
-            row.innerHTML = `
-                <span class="text-[9px] font-bold ${isCurrent ? 'text-indigo-300' : 'text-slate-500'} w-12 flex-shrink-0">
-                    Vial ${v.idx+1}${isCurrent ? ' ★' : ''}
-                </span>
-                <div class="flex-1">
-                    <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
-                        <div class="h-full rounded-full transition-all ${isCrit ? 'bg-rose-500' : isCurrent ? 'bg-indigo-500' : 'bg-slate-600'}"
-                            style="width:${pct}%"></div>
-                    </div>
-                </div>
-                <span class="text-[9px] font-bold ${isCrit ? 'text-rose-300' : isCurrent ? 'text-indigo-300' : 'text-slate-400'} w-16 text-right flex-shrink-0">
-                    ${doses} × ${formatarDose(doseAlvo)}
-                </span>
-                <span class="text-[9px] text-slate-600 w-12 text-right flex-shrink-0">
-                    ${v.mgRestante.toFixed(1)}mg
-                </span>
-            `;
+        viaisComDose.forEach(v=>{
+            const doses=Math.floor(v.mgRestante/configApp.doseAlvo),pct=Math.round((v.mgRestante/v.mgInicial)*100);
+            const isCurrent=v.idx===vialAtualIdx,isCrit=pct<20;
+            const row=document.createElement('div');
+            row.className=`flex items-center gap-2 ${isCurrent?'bg-indigo-950/30 border border-indigo-500/20':'bg-slate-900/40 border border-slate-800'} rounded-xl px-3 py-2`;
+            row.innerHTML=`<span class="text-[9px] font-bold ${isCurrent?'text-indigo-300':'text-slate-500'} w-12 flex-shrink-0">Vial ${v.idx+1}${isCurrent?' ★':''}</span><div class="flex-1"><div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden"><div class="h-full rounded-full transition-all ${isCrit?'bg-rose-500':isCurrent?'bg-indigo-500':'bg-slate-600'}" style="width:${pct}%"></div></div></div><span class="text-[9px] font-bold ${isCrit?'text-rose-300':isCurrent?'text-indigo-300':'text-slate-400'} w-16 text-right flex-shrink-0">${doses} × ${formatarDose(configApp.doseAlvo)}</span><span class="text-[9px] text-slate-600 w-12 text-right flex-shrink-0">${v.mgRestante.toFixed(1)}mg</span>`;
             container.appendChild(row);
         });
     }
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        LÓGICA PRINCIPAL
-    ═══════════════════════════ */
-    let listaProjecaoPontos = [];
-
+    ══════════════════════════════ */
     function calcularLogicaPrincipal() {
         const calContainer = document.getElementById('calendarioContainer');
         const boxStatus    = document.getElementById('boxStatusMeta');
-        calContainer.innerHTML = '';
-        listaProjecaoPontos    = [];
+        calContainer.innerHTML=''; listaProjecaoPontos=[];
+        let dataBase=new Date(), pesoAtualEvolutivo=configApp.pesoInicial||80;
+        const cronologico=[...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
+        if(cronologico.length>0){ dataBase=new Date(cronologico[cronologico.length-1].dataRaw+'T12:00:00'); pesoAtualEvolutivo=cronologico[cronologico.length-1].peso; }
 
-        let dataBase           = new Date();
-        let pesoAtualEvolutivo = configApp.pesoInicial || 80;
-        const cronologico = [...registros].sort((a,b) => new Date(a.dataRaw) - new Date(b.dataRaw));
+        let mediaPerdaSemanal=1.0;
+        if(cronologico.length>=2&&configApp.pesoInicial){ const sem=(new Date(cronologico[cronologico.length-1].dataRaw)-new Date(cronologico[0].dataRaw))/(1000*60*60*24*7); mediaPerdaSemanal=sem>0?Math.max(0.1,(configApp.pesoInicial-pesoAtualEvolutivo)/sem):1.0; }
+        else if(cronologico.length===1&&configApp.pesoInicial){ mediaPerdaSemanal=Math.max(0.1,configApp.pesoInicial-pesoAtualEvolutivo); }
+        mediaPerdaSemanal=Math.min(mediaPerdaSemanal,2.5);
 
-        if (cronologico.length > 0) {
-            dataBase           = new Date(cronologico[cronologico.length-1].dataRaw + 'T12:00:00');
-            pesoAtualEvolutivo = cronologico[cronologico.length-1].peso;
-        }
+        document.getElementById('lblTotalEliminado').innerText=`-${(configApp.pesoInicial?(configApp.pesoInicial-pesoAtualEvolutivo):0).toFixed(1)} kg`;
+        document.getElementById('lblMediaSemanal').innerText=`${mediaPerdaSemanal.toFixed(2)} kg/sem`;
 
-        /* ── Média de perda semanal ── */
-        let mediaPerdaSemanal = 1.0;
-        if (cronologico.length >= 2 && configApp.pesoInicial) {
-            const semanas = (new Date(cronologico[cronologico.length-1].dataRaw) - new Date(cronologico[0].dataRaw)) / (1000*60*60*24*7);
-            const delta   = configApp.pesoInicial - pesoAtualEvolutivo;
-            mediaPerdaSemanal = semanas > 0 ? Math.max(0.1, delta/semanas) : 1.0;
-        } else if (cronologico.length === 1 && configApp.pesoInicial) {
-            mediaPerdaSemanal = Math.max(0.1, configApp.pesoInicial - pesoAtualEvolutivo);
-        }
+        const vials=calcularEstoqueAmpolas(cronologico);
+        const {vialAtualIdx}=renderizarEstoqueVisual(vials);
+        renderizarProjecaoVials(vials,vialAtualIdx);
 
-        document.getElementById('lblTotalEliminado').innerText = `-${(configApp.pesoInicial ? (configApp.pesoInicial - pesoAtualEvolutivo) : 0).toFixed(1)} kg`;
-        document.getElementById('lblMediaSemanal').innerText   = `${mediaPerdaSemanal.toFixed(2)} kg/sem`;
+        const mgTotalRestante=vials.reduce((a,v)=>a+v.mgRestante,0);
+        const totalDosesFuturas=Math.floor(mgTotalRestante/configApp.doseAlvo);
 
-        /* ════ ESTOQUE ════ */
-        const vials = calcularEstoqueAmpolas(cronologico);
-        const { vialAtualIdx } = renderizarEstoqueVisual(vials);
-        renderizarProjecaoVials(vials, vialAtualIdx);
-
-        const mgTotalRestante     = vials.reduce((a,v) => a + v.mgRestante, 0);
-        const totalDosesFuturas   = Math.floor(mgTotalRestante / configApp.doseAlvo);
-
-        /* Vial em uso */
-        if (vialAtualIdx !== -1) {
-            const vu   = vials[vialAtualIdx];
-            const pct  = Math.round((vu.mgRestante / vu.mgInicial) * 100);
-            const doses = Math.floor(vu.mgRestante / configApp.doseAlvo);
-            document.getElementById('lblVialEmUso').innerText         = `Vial ${vialAtualIdx + 1} — ${pct}%`;
-            document.getElementById('lblRendimentoAmpola').innerText  = `${doses} dose${doses !== 1 ? 's' : ''} de ${formatarDose(configApp.doseAlvo)} restam`;
-            document.getElementById('lblMgRestantesVial').innerText   = `${vu.mgRestante.toFixed(1)} mg restantes`;
-
-            const barra = document.getElementById('barraAmpola');
-            barra.style.width = `${pct}%`;
-            barra.className   = `h-full w-0 transition-all duration-500 rounded-full ${
-                pct < 20 ? 'bg-rose-500' : pct <= 50 ? 'bg-amber-500' : 'bg-indigo-500'
-            }`;
+        if(vialAtualIdx!==-1){
+            const vu=vials[vialAtualIdx],pct=Math.round((vu.mgRestante/vu.mgInicial)*100),doses=Math.floor(vu.mgRestante/configApp.doseAlvo);
+            document.getElementById('lblVialEmUso').innerText=`Vial ${vialAtualIdx+1} — ${pct}%`;
+            document.getElementById('lblRendimentoAmpola').innerText=`${doses} dose${doses!==1?'s':''} de ${formatarDose(configApp.doseAlvo)} restam`;
+            document.getElementById('lblMgRestantesVial').innerText=`${vu.mgRestante.toFixed(1)} mg restantes`;
+            const barra=document.getElementById('barraAmpola');
+            barra.style.width=`${pct}%`;
+            barra.className=`h-full w-0 transition-all duration-500 rounded-full ${pct<20?'bg-rose-500':pct<=50?'bg-amber-500':'bg-indigo-500'}`;
         } else {
-            document.getElementById('lblVialEmUso').innerText        = 'Sem vial em uso';
-            document.getElementById('lblRendimentoAmpola').innerText = '0 doses restam';
-            document.getElementById('lblMgRestantesVial').innerText  = '0 mg';
-            document.getElementById('barraAmpola').style.width       = '0%';
+            document.getElementById('lblVialEmUso').innerText='Sem vial em uso';
+            document.getElementById('lblRendimentoAmpola').innerText='0 doses restam';
+            document.getElementById('lblMgRestantesVial').innerText='0 mg';
+            document.getElementById('barraAmpola').style.width='0%';
         }
+        document.getElementById('lblEstoqueResumo').innerText=`${totalDosesFuturas} dose${totalDosesFuturas!==1?'s':''} restante${totalDosesFuturas!==1?'s':''} • ${mgTotalRestante.toFixed(1)} mg`;
 
-        /* Resumo do estoque */
-        document.getElementById('lblEstoqueResumo').innerText = `${totalDosesFuturas} dose${totalDosesFuturas !== 1 ? 's' : ''} restante${totalDosesFuturas !== 1 ? 's' : ''} • ${mgTotalRestante.toFixed(1)} mg`;
+        const alertaCrit=document.getElementById('alertaEstoqueCritico'),txtAl=document.getElementById('txtAlertaEstoque');
+        if(totalDosesFuturas===0){ txtAl.innerText='Estoque esgotado!'; alertaCrit.classList.remove('hidden'); alertaCrit.classList.add('flex'); }
+        else if(totalDosesFuturas<=2){ txtAl.innerText=`Estoque crítico! Apenas ${totalDosesFuturas} dose${totalDosesFuturas>1?'s':''} restante.`; alertaCrit.classList.remove('hidden'); alertaCrit.classList.add('flex','badge-shake'); }
+        else { alertaCrit.classList.add('hidden'); alertaCrit.classList.remove('flex'); }
 
-        /* ════ ALERTA CRÍTICO ════ */
-        const alertaCrit = document.getElementById('alertaEstoqueCritico');
-        const txtAlerta  = document.getElementById('txtAlertaEstoque');
-        if (totalDosesFuturas === 0) {
-            txtAlerta.innerText = 'Estoque esgotado! Nenhuma dose disponível.';
-            alertaCrit.classList.remove('hidden');
-            alertaCrit.classList.add('flex');
-        } else if (totalDosesFuturas <= 2) {
-            txtAlerta.innerText = `Estoque crítico! Apenas ${totalDosesFuturas} dose${totalDosesFuturas > 1 ? 's' : ''} restante${totalDosesFuturas > 1 ? 's' : ''}. Providencie reposição.`;
-            alertaCrit.classList.remove('hidden');
-            alertaCrit.classList.add('flex');
-            alertaCrit.classList.add('badge-shake');
-        } else {
-            alertaCrit.classList.add('hidden');
-            alertaCrit.classList.remove('flex');
-        }
+        document.getElementById('resTotalDoses').innerText=`${cronologico.length+totalDosesFuturas} sem`;
+        document.getElementById('resDoseConfigurada').innerText=formatarDose(configApp.doseAlvo);
 
-        document.getElementById('resTotalDoses').innerText    = `${cronologico.length + totalDosesFuturas} sem`;
-        document.getElementById('resDoseConfigurada').innerText = formatarDose(configApp.doseAlvo);
+        calcularMetabolismo(pesoAtualEvolutivo,mediaPerdaSemanal);
 
-        /* ── Cálculos metabólicos ── */
-        calcularMetabolismo(pesoAtualEvolutivo, mediaPerdaSemanal);
+        let idxUltimoLocal=cronologico.length>0?listaMembrosRodizio.findIndex(m=>m.nome===cronologico[cronologico.length-1].local):-1;
+        document.getElementById('txtAvisoRodizio').innerText=`Rodízio • Próximo: ${listaMembrosRodizio[(idxUltimoLocal+1)%listaMembrosRodizio.length].nome}`;
 
-        /* ── Rodízio ── */
-        let idxUltimoLocal = cronologico.length > 0
-            ? listaMembrosRodizio.findIndex(m => m.nome === cronologico[cronologico.length-1].local)
-            : -1;
-        document.getElementById('txtAvisoRodizio').innerText = `Rodízio • Próximo: ${listaMembrosRodizio[(idxUltimoLocal+1) % listaMembrosRodizio.length].nome}`;
+        const dataTermino=new Date(dataBase.getTime());
+        dataTermino.setDate(dataTermino.getDate()+totalDosesFuturas*7);
+        document.getElementById('resDataTermino').innerText=`${String(dataTermino.getDate()).padStart(2,'0')}/${String(dataTermino.getMonth()+1).padStart(2,'0')}`;
 
-        /* ── Data término do estoque ── */
-        const dataTermino = new Date(dataBase.getTime());
-        dataTermino.setDate(dataTermino.getDate() + totalDosesFuturas * 7);
-        document.getElementById('resDataTermino').innerText =
-            `${String(dataTermino.getDate()).padStart(2,'0')}/${String(dataTermino.getMonth()+1).padStart(2,'0')}`;
-
-        /* ── Badge de dias para próxima dose ── */
-        const hoje = new Date(); hoje.setHours(0,0,0,0);
-        const proxData = new Date(dataBase.getTime());
-        proxData.setDate(proxData.getDate() + 7);
-        const diffDias = Math.ceil((proxData - hoje) / (1000*60*60*24));
-        const badgeEl  = document.getElementById('badgeProximaDose');
-        const lblDias  = document.getElementById('lblDiasRestantes');
-        if (totalDosesFuturas > 0) {
+        const hoje=new Date(); hoje.setHours(0,0,0,0);
+        const proxData=new Date(dataBase.getTime()); proxData.setDate(proxData.getDate()+7);
+        const diffDias=Math.ceil((proxData-hoje)/(1000*60*60*24));
+        const badgeEl=document.getElementById('badgeProximaDose'),lblDias=document.getElementById('lblDiasRestantes');
+        if(totalDosesFuturas>0){
             badgeEl.classList.remove('hidden');
-            if (diffDias <= 0) {
-                lblDias.innerText   = 'Hoje!';
-                lblDias.className   = 'text-base font-black text-emerald-400';
-            } else if (diffDias === 1) {
-                lblDias.innerText   = 'Amanhã';
-                lblDias.className   = 'text-sm font-black text-amber-400';
-            } else {
-                lblDias.innerText   = `${diffDias} dias`;
-                lblDias.className   = 'text-base font-black text-indigo-300';
-            }
+            if(diffDias<=0){ lblDias.innerText='Hoje!'; lblDias.className='text-base font-black text-emerald-400'; }
+            else if(diffDias===1){ lblDias.innerText='Amanhã'; lblDias.className='text-sm font-black text-amber-400'; }
+            else { lblDias.innerText=`${diffDias} dias`; lblDias.className='text-base font-black text-indigo-300'; }
         }
 
-        /* ── Calendário de doses futuras ── */
-        const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-        const meses      = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-        let pesoSimulado = pesoAtualEvolutivo;
-        let dataSimulada = new Date(dataBase.getTime());
-        let doseAtingeMeta = -1;
-
-        for (let i = 1; i <= totalDosesFuturas; i++) {
-            dataSimulada.setDate(dataSimulada.getDate() + 7);
-            pesoSimulado = Math.max(30, pesoSimulado - mediaPerdaSemanal);
-
-            const iso     = dataSimulada.toISOString().split('T')[0];
-            const diaSem  = diasSemana[dataSimulada.getDay()];
-            const diaNum  = String(dataSimulada.getDate()).padStart(2,'0');
-            const mesStr  = meses[dataSimulada.getMonth()];
-            const dataBR  = `${diaNum}/${String(dataSimulada.getMonth()+1).padStart(2,'0')}`;
-            const membro  = listaMembrosRodizio[(idxUltimoLocal + i) % listaMembrosRodizio.length];
-            const pesoTxt = pesoSimulado.toFixed(1);
-
-            listaProjecaoPontos.push({ label: dataBR, peso: parseFloat(pesoTxt) });
-
-            const coresLocal = {
-                'Abdômen (Esquerdo)': { bg:'bg-teal-500/10', border:'border-teal-500/30', text:'text-teal-300', dot:'bg-teal-400' },
-                'Abdômen (Direito)':  { bg:'bg-teal-500/10', border:'border-teal-500/30', text:'text-teal-300', dot:'bg-teal-400' },
-                'Coxa Esquerda':      { bg:'bg-violet-500/10', border:'border-violet-500/30', text:'text-violet-300', dot:'bg-violet-400' },
-                'Coxa Direita':       { bg:'bg-violet-500/10', border:'border-violet-500/30', text:'text-violet-300', dot:'bg-violet-400' },
-            };
-            const cor      = coresLocal[membro.nome] || { bg:'bg-slate-700/50', border:'border-slate-600', text:'text-slate-300', dot:'bg-slate-400' };
-            const isProx   = i === 1;
-            const isAtras  = dataSimulada < hoje;
-
-            const btn = document.createElement('button');
-            btn.className = `snap-start flex-shrink-0 w-[118px] rounded-2xl p-3 text-left cursor-pointer transition-all active:scale-95 ${
-                isProx  ? 'bg-indigo-600 border-2 border-indigo-400 shadow-lg shadow-indigo-900/40'
-                : isAtras ? 'bg-rose-950/40 border border-rose-700/40'
-                :           'bg-slate-900/80 border border-slate-700/50'
-            }`;
-            btn.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <span class="text-[9px] font-bold uppercase ${isProx ? 'text-indigo-200' : 'text-slate-500'}">${diaSem}</span>
-                        <p class="text-lg font-black leading-none ${isProx ? 'text-white' : 'text-slate-200'}">${diaNum}</p>
-                        <span class="text-[10px] font-semibold ${isProx ? 'text-indigo-200' : 'text-slate-400'}">${mesStr}</span>
-                    </div>
-                    <span class="text-[9px] font-bold ${isProx ? 'text-indigo-200 bg-indigo-700/50' : 'text-slate-500 bg-slate-800'} px-1.5 py-0.5 rounded-lg">S${cronologico.length+i}</span>
-                </div>
-                <div class="space-y-1.5">
-                    <span class="text-[10px] font-black ${isProx ? 'text-emerald-300' : 'text-emerald-400'}">↓ ${pesoTxt} kg</span>
-                    <div class="flex items-center gap-1 ${cor.bg} ${cor.border} border rounded-lg px-1.5 py-1">
-                        <span class="w-1.5 h-1.5 rounded-full ${cor.dot} flex-shrink-0"></span>
-                        <span class="text-[9px] font-semibold ${cor.text} leading-tight">${membro.sigla}</span>
-                    </div>
-                    <span class="text-[9px] ${isProx ? 'text-indigo-200' : 'text-slate-500'}">${formatarDose(configApp.doseAlvo)}</span>
-                </div>
-                ${isProx ? '<div class="mt-2 text-center text-[9px] font-bold text-indigo-200 bg-indigo-700/30 rounded-lg py-0.5">Toque p/ registrar</div>' : ''}
-            `;
-            btn.onclick = () => abrirModalRegistroRapido(cronologico.length+i, iso, membro.nome, pesoTxt);
+        const diasSemana=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+        let pesoSimulado=pesoAtualEvolutivo,dataSimulada=new Date(dataBase.getTime()),doseAtingeMeta=-1;
+        for(let i=1;i<=totalDosesFuturas;i++){
+            dataSimulada.setDate(dataSimulada.getDate()+7);
+            pesoSimulado=Math.max(30,pesoSimulado-mediaPerdaSemanal);
+            const iso=dataSimulada.toISOString().split('T')[0];
+            const diaSem=diasSemana[dataSimulada.getDay()],diaNum=String(dataSimulada.getDate()).padStart(2,'0'),mesStr=meses[dataSimulada.getMonth()];
+            const membro=listaMembrosRodizio[(idxUltimoLocal+i)%listaMembrosRodizio.length];
+            const pesoTxt=pesoSimulado.toFixed(1);
+            listaProjecaoPontos.push({label:`${diaNum}/${String(dataSimulada.getMonth()+1).padStart(2,'0')}`,peso:parseFloat(pesoTxt)});
+            const coresLocal={'Abdômen (Esquerdo)':{bg:'bg-teal-500/10',border:'border-teal-500/30',text:'text-teal-300',dot:'bg-teal-400'},'Abdômen (Direito)':{bg:'bg-teal-500/10',border:'border-teal-500/30',text:'text-teal-300',dot:'bg-teal-400'},'Coxa Esquerda':{bg:'bg-violet-500/10',border:'border-violet-500/30',text:'text-violet-300',dot:'bg-violet-400'},'Coxa Direita':{bg:'bg-violet-500/10',border:'border-violet-500/30',text:'text-violet-300',dot:'bg-violet-400'}};
+            const cor=coresLocal[membro.nome]||{bg:'bg-slate-700/50',border:'border-slate-600',text:'text-slate-300',dot:'bg-slate-400'};
+            const isProx=i===1,isAtras=dataSimulada<hoje;
+            const btn=document.createElement('button');
+            btn.className=`snap-start flex-shrink-0 w-[118px] rounded-2xl p-3 text-left cursor-pointer transition-all active:scale-95 ${isProx?'bg-indigo-600 border-2 border-indigo-400 shadow-lg shadow-indigo-900/40':isAtras?'bg-rose-950/40 border border-rose-700/40':'bg-slate-900/80 border border-slate-700/50'}`;
+            btn.innerHTML=`<div class="flex justify-between items-start mb-2"><div><span class="text-[9px] font-bold uppercase ${isProx?'text-indigo-200':'text-slate-500'}">${diaSem}</span><p class="text-lg font-black leading-none ${isProx?'text-white':'text-slate-200'}">${diaNum}</p><span class="text-[10px] font-semibold ${isProx?'text-indigo-200':'text-slate-400'}">${mesStr}</span></div><span class="text-[9px] font-bold ${isProx?'text-indigo-200 bg-indigo-700/50':'text-slate-500 bg-slate-800'} px-1.5 py-0.5 rounded-lg">S${cronologico.length+i}</span></div><div class="space-y-1.5"><span class="text-[10px] font-black ${isProx?'text-emerald-300':'text-emerald-400'}">↓ ${pesoTxt} kg</span><div class="flex items-center gap-1 ${cor.bg} ${cor.border} border rounded-lg px-1.5 py-1"><span class="w-1.5 h-1.5 rounded-full ${cor.dot} flex-shrink-0"></span><span class="text-[9px] font-semibold ${cor.text} leading-tight">${membro.sigla}</span></div><span class="text-[9px] ${isProx?'text-indigo-200':'text-slate-500'}">${formatarDose(configApp.doseAlvo)}</span></div>${isProx?'<div class="mt-2 text-center text-[9px] font-bold text-indigo-200 bg-indigo-700/30 rounded-lg py-0.5">Toque p/ registrar</div>':''}`;
+            btn.onclick=()=>abrirModalRegistroRapido(cronologico.length+i,iso,membro.nome,pesoTxt);
             calContainer.appendChild(btn);
-
-            if (configApp.pesoMeta && pesoSimulado <= configApp.pesoMeta && doseAtingeMeta === -1)
-                doseAtingeMeta = cronologico.length + i;
+            if(configApp.pesoMeta&&pesoSimulado<=configApp.pesoMeta&&doseAtingeMeta===-1) doseAtingeMeta=cronologico.length+i;
         }
-
-        if (!configApp.pesoMeta) {
-            boxStatus.innerHTML = `<span>🎯</span> <span class="text-slate-400">Defina uma meta nos Ajustes.</span>`;
-            return;
-        }
-        boxStatus.innerHTML = doseAtingeMeta !== -1
-            ? `<span>✅</span> Meta prevista na semana ${doseAtingeMeta}.`
-            : `<span>⚠️</span> Estoque acaba em ${pesoSimulado.toFixed(1)} kg antes da meta.`;
+        if(!configApp.pesoMeta){ boxStatus.innerHTML=`<span>🎯</span> <span class="text-slate-400">Defina uma meta nos Ajustes.</span>`; return; }
+        boxStatus.innerHTML=doseAtingeMeta!==-1?`<span>✅</span> Meta prevista na semana ${doseAtingeMeta}.`:`<span>⚠️</span> Estoque acaba em ${pesoSimulado.toFixed(1)} kg antes da meta.`;
     }
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        PROGRESSO DE META
-    ═══════════════════════════ */
+    ══════════════════════════════ */
     function atualizarProgressoMeta() {
-        const card = document.getElementById('cardMetaProgresso');
-        if (!configApp.pesoMeta || registros.length === 0 || !configApp.pesoInicial) { card.classList.add('hidden'); return; }
+        const card=document.getElementById('cardMetaProgresso');
+        if(!configApp.pesoMeta||registros.length===0||!configApp.pesoInicial){ card.classList.add('hidden'); return; }
         card.classList.remove('hidden');
-
-        const crono     = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
-        const pesoAtual = crono[crono.length-1].peso;
-        const totalPerder = configApp.pesoInicial - configApp.pesoMeta;
-        const jaPerdido   = Math.max(0, configApp.pesoInicial - pesoAtual);
-        const faltaPerder = Math.max(0, pesoAtual - configApp.pesoMeta);
-        const pct = Math.max(0, Math.min(Math.round((jaPerdido / totalPerder) * 100), 100));
-        const metaAtingida = pesoAtual <= configApp.pesoMeta;
-
-        document.getElementById('txtPesoInicialMeta').innerText  = `${configApp.pesoInicial} kg`;
-        document.getElementById('txtPesoAlvoMeta').innerText     = `${configApp.pesoMeta} kg`;
-        document.getElementById('txtPorcentagemMeta').innerText  = `${pct}%`;
-        document.getElementById('txtRestamQuilos').innerText     = metaAtingida ? 'Meta atingida! 🏆' : `Faltam ${faltaPerder.toFixed(1)} kg`;
-        document.getElementById('lblKgPerdidoMeta').innerText    = `-${jaPerdido.toFixed(1)} kg`;
-        document.getElementById('lblKgFaltaMeta').innerText      = metaAtingida ? '0 kg ✅' : `${faltaPerder.toFixed(1)} kg`;
-
-        const badge = document.getElementById('badgeMetaStatus');
-        if      (metaAtingida)   { badge.innerText = '🏆 Concluído';   badge.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-emerald-500/15 border-emerald-500/30 text-emerald-300'; }
-        else if (pct >= 75)      { badge.innerText = '🔥 Quase lá!';  badge.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-amber-500/15 border-amber-500/30 text-amber-300'; }
-        else if (pct >= 50)      { badge.innerText = '💪 Na metade';  badge.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-indigo-500/15 border-indigo-500/30 text-indigo-300'; }
-        else                     { badge.innerText = '🚀 Em progresso'; badge.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-slate-700/50 border-slate-600 text-slate-300'; }
-
-        document.getElementById('barraMeta').style.width = `${pct}%`;
-        document.getElementById('anelMeta').style.strokeDashoffset = 201 - (pct/100)*201;
-
-        const boxEst = document.getElementById('boxEstimativaMeta');
-        const txtEst = document.getElementById('txtEstimativaMeta');
-        if (!metaAtingida && crono.length >= 2) {
-            const semanas = (new Date(crono[crono.length-1].dataRaw) - new Date(crono[0].dataRaw)) / (1000*60*60*24*7);
-            const media   = semanas > 0 ? jaPerdido / semanas : 1;
-            if (media > 0) {
-                const semsRest = Math.ceil(faltaPerder / media);
-                const dataEst  = new Date();
-                dataEst.setDate(dataEst.getDate() + semsRest*7);
-                const m = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-                txtEst.innerText = `Estimativa: ${dataEst.getDate()} de ${m[dataEst.getMonth()]} de ${dataEst.getFullYear()} (${semsRest} sem)`;
-                boxEst.classList.remove('hidden');
-            }
+        const crono=[...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
+        const pesoAtual=crono[crono.length-1].peso;
+        const totalPerder=configApp.pesoInicial-configApp.pesoMeta;
+        const jaPerdido=Math.max(0,configApp.pesoInicial-pesoAtual);
+        const faltaPerder=Math.max(0,pesoAtual-configApp.pesoMeta);
+        const pct=Math.max(0,Math.min(Math.round((jaPerdido/totalPerder)*100),100));
+        const metaAtingida=pesoAtual<=configApp.pesoMeta;
+        document.getElementById('txtPesoInicialMeta').innerText=`${configApp.pesoInicial} kg`;
+        document.getElementById('txtPesoAlvoMeta').innerText=`${configApp.pesoMeta} kg`;
+        document.getElementById('txtPorcentagemMeta').innerText=`${pct}%`;
+        document.getElementById('txtRestamQuilos').innerText=metaAtingida?'Meta atingida! 🏆':`Faltam ${faltaPerder.toFixed(1)} kg`;
+        document.getElementById('lblKgPerdidoMeta').innerText=`-${jaPerdido.toFixed(1)} kg`;
+        document.getElementById('lblKgFaltaMeta').innerText=metaAtingida?'0 kg ✅':`${faltaPerder.toFixed(1)} kg`;
+        const badge=document.getElementById('badgeMetaStatus');
+        if(metaAtingida){badge.innerText='🏆 Concluído';badge.className='px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-emerald-500/15 border-emerald-500/30 text-emerald-300';}
+        else if(pct>=75){badge.innerText='🔥 Quase lá!';badge.className='px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-amber-500/15 border-amber-500/30 text-amber-300';}
+        else if(pct>=50){badge.innerText='💪 Na metade';badge.className='px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-indigo-500/15 border-indigo-500/30 text-indigo-300';}
+        else{badge.innerText='🚀 Em progresso';badge.className='px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-slate-700/50 border-slate-600 text-slate-300';}
+        document.getElementById('barraMeta').style.width=`${pct}%`;
+        document.getElementById('anelMeta').style.strokeDashoffset=201-(pct/100)*201;
+        const boxEst=document.getElementById('boxEstimativaMeta'),txtEst=document.getElementById('txtEstimativaMeta');
+        if(!metaAtingida&&crono.length>=2){
+            const sem=(new Date(crono[crono.length-1].dataRaw)-new Date(crono[0].dataRaw))/(1000*60*60*24*7);
+            const media=sem>0?jaPerdido/sem:1;
+            if(media>0){ const semsRest=Math.ceil(faltaPerder/media),dataEst=new Date(); dataEst.setDate(dataEst.getDate()+semsRest*7); const m=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']; txtEst.innerText=`Estimativa: ${dataEst.getDate()} de ${m[dataEst.getMonth()]} de ${dataEst.getFullYear()} (${semsRest} sem)`; boxEst.classList.remove('hidden'); }
         } else { boxEst.classList.add('hidden'); }
     }
 
-    /* ════════════════════════════
-       GRÁFICO
-    ═══════════════════════════ */
+    /* ══════════════════════════════
+       GRÁFICO DE PESO
+    ══════════════════════════════ */
     function atualizarGrafico() {
-        const ctx = document.getElementById('graficoPeso').getContext('2d');
-        const real = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
-        let labels = [], valReais = [];
-
-        if (configApp.pesoInicial) { labels.push("Início"); valReais.push(configApp.pesoInicial); }
-        real.forEach(r => { labels.push(`${r.dataRaw.split('-')[2]}/${r.dataRaw.split('-')[1]}`); valReais.push(r.peso); });
-
-        let valProj = Array(valReais.length).fill(null);
-        if (valReais.length > 0 && listaProjecaoPontos.length > 0) {
-            valProj[valReais.length-1] = valReais[valReais.length-1];
-            listaProjecaoPontos.forEach(p => { labels.push(p.label); valReais.push(null); valProj.push(p.peso); });
+        const ctx=document.getElementById('graficoPeso').getContext('2d');
+        const real=[...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
+        let labels=[],valReais=[];
+        if(configApp.pesoInicial){labels.push("Início");valReais.push(configApp.pesoInicial);}
+        real.forEach(r=>{labels.push(`${r.dataRaw.split('-')[2]}/${r.dataRaw.split('-')[1]}`);valReais.push(r.peso);});
+        let valProj=Array(valReais.length).fill(null);
+        if(valReais.length>0&&listaProjecaoPontos.length>0){
+            valProj[valReais.length-1]=valReais[valReais.length-1];
+            listaProjecaoPontos.forEach(p=>{labels.push(p.label);valReais.push(null);valProj.push(p.peso);});
         }
-
-        const gR = ctx.createLinearGradient(0,0,0,220);
-        gR.addColorStop(0,'rgba(52,211,153,.25)'); gR.addColorStop(1,'rgba(52,211,153,.01)');
-        const gP = ctx.createLinearGradient(0,0,0,220);
-        gP.addColorStop(0,'rgba(99,102,241,.15)'); gP.addColorStop(1,'rgba(99,102,241,.01)');
-
-        const todos = [...valReais,...valProj].filter(v=>v!==null);
-        if (configApp.pesoMeta) todos.push(configApp.pesoMeta);
-        const minP = todos.length ? Math.floor(Math.min(...todos))-2 : 50;
-        const maxP = todos.length ? Math.ceil(Math.max(...todos))+2  : 100;
-
-        if (chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(ctx, {
-            type:'line',
-            data:{
-                labels,
-                datasets:[
-                    { label:'Peso Real', data:valReais, borderColor:'#34d399', borderWidth:2.5, backgroundColor:gR, fill:true, pointRadius:5, pointHoverRadius:7, pointBackgroundColor:'#34d399', pointBorderColor:'#0f172a', pointBorderWidth:2, tension:0.35, spanGaps:false },
-                    { label:'Projeção', data:valProj, borderColor:'#818cf8', borderWidth:2, borderDash:[5,4], backgroundColor:gP, fill:true, pointRadius:3, pointHoverRadius:5, pointBackgroundColor:'#818cf8', pointBorderColor:'#0f172a', pointBorderWidth:1.5, tension:0.35, spanGaps:false },
-                    { label:'Meta', data: configApp.pesoMeta ? Array(labels.length).fill(configApp.pesoMeta) : [], borderColor:'#fb7185', borderWidth:1.5, borderDash:[6,5], backgroundColor:'transparent', fill:false, pointRadius:0, tension:0 }
-                ]
-            },
-            options:{
-                responsive:true, maintainAspectRatio:false,
-                interaction:{ mode:'index', intersect:false },
-                plugins:{
-                    legend:{ display:false },
-                    tooltip:{ backgroundColor:'#1e293b', borderColor:'#334155', borderWidth:1, titleColor:'#94a3b8', bodyColor:'#f1f5f9', padding:10,
-                        callbacks:{ label: ctx => ctx.parsed.y===null ? null : ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} kg` }
-                    }
-                },
-                scales:{
-                    x:{ grid:{ color:'rgba(51,65,85,.5)', drawTicks:false }, ticks:{ color:'#64748b', font:{size:10}, maxRotation:45, autoSkip:true, maxTicksLimit:8 }, border:{ color:'rgba(51,65,85,.4)' } },
-                    y:{ min:minP, max:maxP, grid:{ color:'rgba(51,65,85,.4)', drawTicks:false }, ticks:{ color:'#64748b', font:{size:10}, callback: v=>`${v} kg`, maxTicksLimit:6 }, border:{ color:'rgba(51,65,85,.4)' } }
-                }
-            }
-        });
+        const todos=[...valReais,...valProj].filter(v=>v!==null);
+        if(configApp.pesoMeta) todos.push(configApp.pesoMeta);
+        const minP=todos.length?Math.floor(Math.min(...todos))-2:50;
+        const maxP=todos.length?Math.ceil(Math.max(...todos))+2:100;
+        if(chartInstance) chartInstance.destroy();
+        chartInstance=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Peso Real',data:valReais,borderColor:'#34d399',borderWidth:2.5,backgroundColor:'rgba(52,211,153,.15)',fill:true,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:'#34d399',pointBorderColor:'#0f172a',pointBorderWidth:2,tension:0.35,spanGaps:false},{label:'Projeção',data:valProj,borderColor:'#818cf8',borderWidth:2,borderDash:[5,4],backgroundColor:'rgba(99,102,241,.08)',fill:true,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:'#818cf8',pointBorderColor:'#0f172a',pointBorderWidth:1.5,tension:0.35,spanGaps:false},{label:'Meta',data:configApp.pesoMeta?Array(labels.length).fill(configApp.pesoMeta):[],borderColor:'#fb7185',borderWidth:1.5,borderDash:[6,5],backgroundColor:'transparent',fill:false,pointRadius:0,tension:0}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#94a3b8',bodyColor:'#f1f5f9',padding:10,callbacks:{label:ctx=>ctx.parsed.y===null?null:` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} kg`}}},scales:{x:{grid:{color:'rgba(51,65,85,.5)',drawTicks:false},ticks:{color:'#64748b',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:8},border:{color:'rgba(51,65,85,.4)'}},y:{min:minP,max:maxP,grid:{color:'rgba(51,65,85,.4)',drawTicks:false},ticks:{color:'#64748b',font:{size:10},callback:v=>`${v} kg`,maxTicksLimit:6},border:{color:'rgba(51,65,85,.4)'}}}}});
     }
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        LISTA DE REGISTROS
-    ═══════════════════════════ */
+    ══════════════════════════════ */
     function renderizarLista() {
-        const listaHtml = document.getElementById('listaRegistros');
-        listaHtml.innerHTML = '';
-
-        const sintomaConfig = {
-            'Sem Sintomas':    { cor:'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', icone:'✅' },
-            'Náusea Leve':     { cor:'text-amber-400 bg-amber-500/10 border-amber-500/20',       icone:'🤢' },
-            'Muita Saciedade': { cor:'text-blue-400 bg-blue-500/10 border-blue-500/20',          icone:'😶' },
-            'Constipação':     { cor:'text-orange-400 bg-orange-500/10 border-orange-500/20',    icone:'😣' },
-            'Fadiga':          { cor:'text-violet-400 bg-violet-500/10 border-violet-500/20',    icone:'😴' },
-        };
-        const localConfig = {
-            'Abdômen (Esquerdo)': { cor:'text-teal-300', dot:'bg-teal-400' },
-            'Abdômen (Direito)':  { cor:'text-teal-300', dot:'bg-teal-400' },
-            'Coxa Esquerda':      { cor:'text-violet-300', dot:'bg-violet-400' },
-            'Coxa Direita':       { cor:'text-violet-300', dot:'bg-violet-400' },
-        };
-
-        const ordenado = [...registros].sort((a,b) => new Date(b.dataRaw)-new Date(a.dataRaw));
-        document.getElementById('lblTotalRegistros').innerText = `${ordenado.length} aplicação${ordenado.length!==1?'ões':''} registrada${ordenado.length!==1?'s':''}`;
-        if (ordenado.length > 0) {
-            document.getElementById('badgeUltimaDose').classList.remove('hidden');
-            document.getElementById('lblDataUltimaDose').innerText = ordenado[0].dataFormatada;
-        }
-
-        if (ordenado.length === 0) {
-            listaHtml.innerHTML = `<div class="flex flex-col items-center justify-center py-6 text-center gap-2"><span class="text-3xl opacity-30">💉</span><p class="text-slate-500 text-xs">Nenhuma dose registrada ainda.</p></div>`;
-            return;
-        }
-
-        ordenado.forEach((reg, idx) => {
-            const sint   = sintomaConfig[reg.sintoma] || sintomaConfig['Sem Sintomas'];
-            const loc    = localConfig[reg.local]     || { cor:'text-slate-300', dot:'bg-slate-400' };
-            const isPrim = idx === 0;
-
-            let varHtml = '';
-            if (idx < ordenado.length-1) {
-                const diff = reg.peso - ordenado[idx+1].peso;
-                varHtml = diff < 0 ? `<span class="text-[9px] font-bold text-emerald-400">▼ ${Math.abs(diff).toFixed(1)} kg</span>`
-                        : diff > 0 ? `<span class="text-[9px] font-bold text-rose-400">▲ ${diff.toFixed(1)} kg</span>`
-                        :            `<span class="text-[9px] text-slate-500">= sem variação</span>`;
-            }
-
-            const item = document.createElement('div');
-            item.className = `rounded-xl border p-3 ${isPrim ? 'bg-slate-900/80 border-indigo-500/20' : 'bg-slate-900/40 border-slate-800'}`;
-            item.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div class="flex items-center gap-2.5">
-                        <div class="text-center bg-slate-800 rounded-lg px-2 py-1.5 border border-slate-700 min-w-[38px]">
-                            <span class="text-sm font-black text-white leading-none block">${reg.dataFormatada.split('/')[0]}</span>
-                            <span class="text-[9px] text-slate-400 font-semibold">/${reg.dataFormatada.split('/')[1]||''}</span>
-                        </div>
-                        <div class="space-y-0.5">
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm font-black text-white">${reg.peso} kg</span>${varHtml}
-                                ${isPrim ? '<span class="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded-md font-bold">Última</span>' : ''}
-                            </div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-[9px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">${formatarDose(reg.dose)}</span>
-                                <span class="flex items-center gap-1 text-[9px] ${loc.cor}"><span class="w-1.5 h-1.5 rounded-full ${loc.dot}"></span>${reg.local}</span>
-                            </div>
-                            <span class="inline-flex items-center gap-1 text-[9px] border rounded-md px-1.5 py-0.5 ${sint.cor}">${sint.icone} ${reg.sintoma||'Sem Sintomas'}</span>
-                        </div>
-                    </div>
-                    <button onclick="deletarRegistroUnico(${reg.id})" class="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 active:scale-90 transition-all cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                    </button>
-                </div>
-            `;
+        const listaHtml=document.getElementById('listaRegistros'); listaHtml.innerHTML='';
+        const sintomaConfig={'Sem Sintomas':{cor:'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',icone:'✅'},'Náusea Leve':{cor:'text-amber-400 bg-amber-500/10 border-amber-500/20',icone:'🤢'},'Muita Saciedade':{cor:'text-blue-400 bg-blue-500/10 border-blue-500/20',icone:'😶'},'Constipação':{cor:'text-orange-400 bg-orange-500/10 border-orange-500/20',icone:'😣'},'Fadiga':{cor:'text-violet-400 bg-violet-500/10 border-violet-500/20',icone:'😴'}};
+        const localConfig={'Abdômen (Esquerdo)':{cor:'text-teal-300',dot:'bg-teal-400'},'Abdômen (Direito)':{cor:'text-teal-300',dot:'bg-teal-400'},'Coxa Esquerda':{cor:'text-violet-300',dot:'bg-violet-400'},'Coxa Direita':{cor:'text-violet-300',dot:'bg-violet-400'}};
+        const ordenado=[...registros].sort((a,b)=>new Date(b.dataRaw)-new Date(a.dataRaw));
+        document.getElementById('lblTotalRegistros').innerText=`${ordenado.length} aplicação${ordenado.length!==1?'ões':''} registrada${ordenado.length!==1?'s':''}`;
+        if(ordenado.length>0){document.getElementById('badgeUltimaDose').classList.remove('hidden');document.getElementById('lblDataUltimaDose').innerText=ordenado[0].dataFormatada;}
+        if(ordenado.length===0){listaHtml.innerHTML=`<div class="flex flex-col items-center justify-center py-6 text-center gap-2"><span class="text-3xl opacity-30">💉</span><p class="text-slate-500 text-xs">Nenhuma dose registrada ainda.</p></div>`;return;}
+        ordenado.forEach((reg,idx)=>{
+            const sint=sintomaConfig[reg.sintoma]||sintomaConfig['Sem Sintomas'];
+            const loc=localConfig[reg.local]||{cor:'text-slate-300',dot:'bg-slate-400'};
+            const isPrim=idx===0;
+            let varHtml='';
+            if(idx<ordenado.length-1){const diff=reg.peso-ordenado[idx+1].peso;varHtml=diff<0?`<span class="text-[9px] font-bold text-emerald-400">▼ ${Math.abs(diff).toFixed(1)} kg</span>`:diff>0?`<span class="text-[9px] font-bold text-rose-400">▲ ${diff.toFixed(1)} kg</span>`:`<span class="text-[9px] text-slate-500">= sem variação</span>`;}
+            const item=document.createElement('div');
+            item.className=`rounded-xl border p-3 ${isPrim?'bg-slate-900/80 border-indigo-500/20':'bg-slate-900/40 border-slate-800'}`;
+            item.innerHTML=`<div class="flex justify-between items-start"><div class="flex items-center gap-2.5"><div class="text-center bg-slate-800 rounded-lg px-2 py-1.5 border border-slate-700 min-w-[38px]"><span class="text-sm font-black text-white leading-none block">${reg.dataFormatada.split('/')[0]}</span><span class="text-[9px] text-slate-400 font-semibold">/${reg.dataFormatada.split('/')[1]||''}</span></div><div class="space-y-0.5"><div class="flex items-center gap-2"><span class="text-sm font-black text-white">${reg.peso} kg</span>${varHtml}${isPrim?'<span class="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded-md font-bold">Última</span>':''}</div><div class="flex items-center gap-2 flex-wrap"><span class="text-[9px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">${formatarDose(reg.dose)}</span><span class="flex items-center gap-1 text-[9px] ${loc.cor}"><span class="w-1.5 h-1.5 rounded-full ${loc.dot}"></span>${reg.local}</span></div><span class="inline-flex items-center gap-1 text-[9px] border rounded-md px-1.5 py-0.5 ${sint.cor}">${sint.icone} ${reg.sintoma||'Sem Sintomas'}</span></div></div><button onclick="deletarRegistroUnico(${reg.id})" class="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 active:scale-90 transition-all cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`;
             listaHtml.appendChild(item);
         });
     }
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        RESET
-    ═══════════════════════════ */
+    ══════════════════════════════ */
     window.limparTudo = async function() {
-        if (confirm('Apagar todo o histórico da nuvem?')) {
-            registros = [];
-            configApp = { pesoInicial:null, pesoMeta:null, ampolas:1, doseAlvo:2.5, altura:null, idade:null, sexo:'M', atividade:1.2, aguaLog:{} };
-            await setDoc(doc(db,"usuarios",usuarioAtual.uid), { registros, configApp });
-            toggleConfigModal();
-            atualizarTudo();
+        if(confirm('Apagar todo o histórico da nuvem?')){
+            registros=[];
+            configApp={pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,aguaLog:{},notifDose:true,notifAgua:true};
+            await setDoc(doc(db,"usuarios",usuarioAtual.uid),{registros,configApp});
+            toggleConfigModal(); atualizarTudo();
         }
     };
 
-    /* ════════════════════════════
+    /* ══════════════════════════════
        ORQUESTRADOR
-    ═══════════════════════════ */
+    ══════════════════════════════ */
     function atualizarTudo() {
         renderizarLista();
         calcularLogicaPrincipal();
         atualizarProgressoMeta();
         atualizarGrafico();
         processarPainelAgua();
+        atualizarNota();
+        dadosCorrelacao = calcularCorrelacaoSintomas();
+        mostrarDiaSintoma(1);
+        renderizarMapaCalorSintomas();
+        atualizarGraficoIMC();
     }
 </script>
 </body>
