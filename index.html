@@ -4,789 +4,1530 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Mounjaro Tracker</title>
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mounjaro">
-    
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <style>
         body {
             padding-top: calc(env(safe-area-inset-top) + 1rem);
             padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
             -webkit-tap-highlight-color: transparent;
         }
-        /* Ocultar barra de rolagem horizontal da galeria no iOS */
-        .scrollbar-none::-webkit-scrollbar {
-            display: none;
+
+        /* ── Estoque: ampola animada ── */
+        .vial-fill { transition: height 0.6s cubic-bezier(.4,0,.2,1); }
+
+        /* ── Alerta de estoque pulsante ── */
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.35); }
+            50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
         }
-        .scrollbar-none {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        .vial-critical { animation: pulse-border 1.8s ease-in-out infinite; }
+
+        /* ── Badge "Estoque Baixo" shake ── */
+        @keyframes shake {
+            0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}
         }
+        .badge-shake { animation: shake 0.5s ease; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen px-4 pb-12">
 
-    <section id="telaLogin" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center px-4">
-        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
-            <div class="text-center">
-                <h2 class="text-2xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Mounjaro Journey</h2>
-                <p class="text-xs text-slate-400 mt-1">Acesso Restrito • Faça login para continuar</p>
-            </div>
-            <div class="space-y-3">
-                <input type="email" id="loginEmail" placeholder="E-mail autorizado" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-400">
-                <input type="password" id="loginSenha" placeholder="Sua senha" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-400">
-            </div>
-            <div class="pt-2">
-                <button onclick="fazerLogin()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold rounded-xl text-sm active:opacity-90 cursor-pointer">Entrar</button>
+<!-- ══════════════════════════════════════════
+     TELA DE LOGIN
+═══════════════════════════════════════════ -->
+<section id="telaLogin" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center px-4">
+    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+        <div class="text-center">
+            <h2 class="text-2xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Mounjaro Journey</h2>
+            <p class="text-xs text-slate-400 mt-1">Acesso Restrito • Faça login para continuar</p>
+        </div>
+        <div class="space-y-3">
+            <input type="email" id="loginEmail" placeholder="E-mail autorizado"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-400">
+            <div class="relative">
+                <input type="password" id="loginSenha" placeholder="Sua senha"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 pr-10 text-sm text-white outline-none focus:border-emerald-400">
+                <button type="button" onclick="toggleSenhaVisivel()"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs cursor-pointer" id="btnVerSenha">👁</button>
             </div>
         </div>
-    </section>
+        <div class="pt-2">
+            <button onclick="fazerLogin()"
+                class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold rounded-xl text-sm active:opacity-90 cursor-pointer">
+                Entrar
+            </button>
+        </div>
+    </div>
+</section>
 
-    <div id="conteudoApp" class="hidden">
-        <header class="max-w-md mx-auto mb-4 flex justify-between items-center pt-2">
-            <div>
-                <h1 class="text-xl font-bold text-white flex items-center gap-1">Mounjaro Journey</h1>
-                <p id="lblUserEmail" class="text-[10px] text-slate-400">logado como...</p>
+<!-- ══════════════════════════════════════════
+     CONTEÚDO PRINCIPAL
+═══════════════════════════════════════════ -->
+<div id="conteudoApp" class="hidden">
+    <header class="max-w-md mx-auto mb-4 flex justify-between items-center pt-2">
+        <div>
+            <h1 class="text-xl font-bold text-white">Mounjaro Journey</h1>
+            <p id="lblUserEmail" class="text-[10px] text-slate-400">logado como...</p>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <button onclick="toggleConfigModal()"
+                class="p-2 rounded-xl bg-slate-800 border border-slate-700/60 text-slate-300 text-xs font-semibold cursor-pointer">⚙️ Ajustes</button>
+            <button onclick="fazerLogout()"
+                class="p-2 rounded-xl bg-slate-800 border border-rose-500/20 text-rose-400 text-xs font-semibold cursor-pointer">Sair</button>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto space-y-4">
+
+        <!-- ══════════════════════════════
+             MODAL DE AJUSTES
+        ══════════════════════════════ -->
+        <section id="modalConfig"
+            class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-2xl hidden space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-700">
+                <h3 class="text-sm font-bold text-slate-200">Ajustes do Tratamento</h3>
+                <button onclick="toggleConfigModal()" class="text-xs text-slate-400 font-bold cursor-pointer">Fechar</button>
             </div>
-            <div class="flex items-center gap-1.5">
-                <button onclick="toggleConfigModal()" class="p-2 rounded-xl bg-slate-800 border border-slate-700/60 text-slate-300 text-xs font-semibold cursor-pointer">⚙️ Ajustes</button>
-                <button onclick="fazerLogout()" class="p-2 rounded-xl bg-slate-800 border border-rose-500/20 text-rose-400 text-xs font-semibold cursor-pointer">Sair</button>
+
+            <!-- Peso / Meta -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Peso Inicial Histórico (kg)</label>
+                    <input type="number" step="0.1" id="configPesoInicial"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Meta Alvo Final (kg)</label>
+                    <input type="number" step="0.1" id="configPesoMeta"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                </div>
             </div>
-        </header>
 
-        <main class="max-w-md mx-auto space-y-4">
-            
-            <section id="modalConfig" class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-2xl hidden space-y-4 max-h-[85vh] overflow-y-auto">
-                <div class="flex justify-between items-center pb-2 border-b border-slate-700">
-                    <h3 class="text-sm font-bold text-slate-200">Ajustes do Tratamento</h3>
-                    <button onclick="toggleConfigModal()" class="text-xs text-slate-400 font-bold cursor-pointer">Fechar</button>
+            <!-- Altura / Idade -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Altura (cm)</label>
+                    <input type="number" id="configAltura"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">Peso Inicial Histórico (kg)</label>
-                        <input type="number" step="0.1" id="configPesoInicial" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">Meta Alvo Final (kg)</label>
-                        <input type="number" step="0.1" id="configPesoMeta" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                    </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Idade (anos)</label>
+                    <input type="number" id="configIdade"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
+            </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">Sua Altura (cm)</label>
-                        <input type="number" id="configAltura" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+            <!-- ▸▸ NOVO: Sexo + Nível de atividade -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Sexo Biológico</label>
+                    <select id="configSexo"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                        <option value="M">Masculino</option>
+                        <option value="F">Feminino</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Nível de Atividade</label>
+                    <select id="configAtividade"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                        <option value="1.2">Sedentário (sem exercício)</option>
+                        <option value="1.375">Levemente ativo (1-3x/sem)</option>
+                        <option value="1.55">Moderado (3-5x/sem)</option>
+                        <option value="1.725">Muito ativo (6-7x/sem)</option>
+                        <option value="1.9">Extremamente ativo (2x/dia)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Ampolas / Dose -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Qtd Ampolas 15mg Totais</label>
+                    <input type="number" id="configAmpolas"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Dose Alvo Atual (mg / UI)</label>
+                    <select id="configDoseAlvo"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                        <option value="2.5">2.5 mg — 8 UI</option>
+                        <option value="5.0">5.0 mg — 16 UI</option>
+                        <option value="7.5">7.5 mg — 24 UI</option>
+                        <option value="10.0">10.0 mg — 32 UI</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="salvarConfiguracoes()"
+                class="w-full bg-emerald-500 text-slate-950 py-2.5 rounded-xl text-xs font-bold active:opacity-90 cursor-pointer">
+                Salvar Alterações
+            </button>
+
+            <!-- Tabela de referência mg → UI -->
+            <div class="bg-slate-900/60 rounded-xl p-2.5 border border-slate-800">
+                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-2">💉 Referência Seringa (100 UI/mL)</p>
+                <div class="grid grid-cols-4 gap-1.5 text-center">
+                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700">
+                        <span class="text-[9px] font-black text-white block">2.5 mg</span>
+                        <span class="text-[9px] font-bold text-indigo-300">8 UI</span>
                     </div>
-                    <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">Sua Idade (Anos)</label>
-                        <input type="number" id="configIdade" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700">
+                        <span class="text-[9px] font-black text-white block">5.0 mg</span>
+                        <span class="text-[9px] font-bold text-indigo-300">16 UI</span>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700">
+                        <span class="text-[9px] font-black text-white block">7.5 mg</span>
+                        <span class="text-[9px] font-bold text-indigo-300">24 UI</span>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700">
+                        <span class="text-[9px] font-black text-white block">10.0 mg</span>
+                        <span class="text-[9px] font-bold text-indigo-300">32 UI</span>
                     </div>
                 </div>
+            </div>
 
-                <div class="grid grid-cols-2 gap-3">
+            <!-- Lançar dose histórica -->
+            <div class="pt-4 border-t border-slate-700 space-y-3">
+                <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">⏳ Lançar Dose Antiga</h4>
+                <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">Qtd Ampolas 15mg Totais</label>
-                        <input type="number" id="configAmpolas" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                        <label class="block text-[10px] text-slate-400 mb-0.5">Data da Aplicação</label>
+                        <input type="date" id="histData"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                     </div>
                     <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">Dose Alvo Atual (mg)</label>
-                        <select id="configDoseAlvo" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                            <option value="2.5">2.5 mg</option>
-                            <option value="5.0">5.0 mg</option>
-                            <option value="7.5">7.5 mg</option>
-                            <option value="10.0">10.0 mg</option>
+                        <label class="block text-[10px] text-slate-400 mb-0.5">Peso no Dia (kg)</label>
+                        <input type="number" step="0.1" id="histPeso"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-0.5">Dose Tomada</label>
+                        <select id="histDose"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                            <option value="2.5 mg">2.5 mg — 8 UI</option>
+                            <option value="5.0 mg">5.0 mg — 16 UI</option>
+                            <option value="7.5 mg">7.5 mg — 24 UI</option>
+                            <option value="10.0 mg">10.0 mg — 32 UI</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-0.5">Local do Corpo</label>
+                        <select id="histLocal"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                            <option value="Abdômen (Esquerdo)">Abdômen Esq</option>
+                            <option value="Abdômen (Direito)">Abdômen Dir</option>
+                            <option value="Coxa Esquerda">Coxa Esq</option>
+                            <option value="Coxa Direita">Coxa Dir</option>
                         </select>
                     </div>
                 </div>
+                <button onclick="inserirDoseHistorica()"
+                    class="w-full bg-indigo-600 text-white py-2 rounded-xl text-xs font-semibold cursor-pointer">
+                    Inserir no Histórico
+                </button>
+            </div>
 
-                <div class="bg-indigo-950/40 p-3 rounded-xl border border-indigo-500/20 space-y-2">
-                    <span class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider block">💰 Controle Financeiro</span>
-                    <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">Preço pago por Ampola de 15mg (R$)</label>
-                        <input type="number" step="0.01" id="configPrecoAmpola" placeholder="Ex: 350.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                        <p class="text-[9px] text-slate-500 mt-0.5">Usado para calcular o custo real de cada miligrama injetado.</p>
-                    </div>
+            <div class="pt-2">
+                <button onclick="limparTudo()"
+                    class="w-full text-center text-xs text-rose-400 hover:underline cursor-pointer">
+                    Apagar Tudo e Resetar App
+                </button>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════
+             MODAL LANÇAMENTO RÁPIDO
+        ══════════════════════════════ -->
+        <section id="modalLancamentoRapido"
+            class="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 hidden z-50">
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl max-w-xs w-full space-y-4 shadow-2xl">
+                <div class="text-center">
+                    <h3 class="text-base font-black text-white">Confirmar Aplicação</h3>
+                    <p id="txtSubtituloModalRapido" class="text-xs text-slate-400 mt-1">Registrando...</p>
+                    <p id="txtPrevisaoModalRapido" class="text-xs text-indigo-400 font-semibold mt-1 bg-indigo-500/10 py-1 rounded-lg"></p>
                 </div>
-
-                <button onclick="salvarConfiguracoes()" class="w-full bg-emerald-500 text-slate-950 py-2.5 rounded-xl text-xs font-bold active:opacity-90 cursor-pointer">Salvar Alterações</button>
-
-                <div class="pt-4 border-t border-slate-700 space-y-3">
-                    <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">⏳ Lançar Dose Antiga</h4>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-0.5">Data da Aplicação</label>
-                            <input type="date" id="histData" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-0.5">Peso no Dia (kg)</label>
-                            <input type="number" step="0.1" id="histPeso" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-0.5">Dose Tomada</label>
-                            <select id="histDose" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                                <option value="2.5 mg">2.5 mg</option>
-                                <option value="5.0 mg">5.0 mg</option>
-                                <option value="7.5 mg">7.5 mg</option>
-                                <option value="10.0 mg">10.0 mg</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-0.5">Local do Corpo</label>
-                            <select id="histLocal" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                                <option value="Abdômen (Esquerdo)">Abdômen Esq</option>
-                                <option value="Abdômen (Direito)">Abdômen Dir</option>
-                                <option value="Coxa Esquerda">Coxa Esq</option>
-                                <option value="Coxa Direita">Coxa Dir</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button onclick="inserirDoseHistorica()" class="w-full bg-indigo-600 text-white py-2 rounded-xl text-xs font-semibold cursor-pointer">Inserir no Histórico</button>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1 text-center">Peso Real Hoje (kg)</label>
+                    <input type="number" step="0.1" id="inputPesoRapido"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-center text-lg font-bold text-white outline-none focus:border-emerald-400">
                 </div>
-
-                <div class="pt-2">
-                    <button onclick="limparTudo()" class="w-full text-center text-xs text-rose-400 hover:underline cursor-pointer">Apagar Tudo e Resetar App</button>
+                <select id="inputSintomaRapido"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    <option value="Sem Sintomas">Sem Sintomas</option>
+                    <option value="Náusea Leve">Náusea Leve</option>
+                    <option value="Muita Saciedade">Muita Saciedade</option>
+                    <option value="Constipação">Constipação</option>
+                    <option value="Fadiga">Fadiga</option>
+                </select>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="fecharModalRapido()"
+                        class="py-2.5 bg-slate-700 text-slate-300 rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
+                    <button onclick="confirmarInjecaoRapida()"
+                        class="py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 rounded-xl text-xs font-black shadow-lg cursor-pointer">Salvar</button>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section id="modalLancamentoRapido" class="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 hidden z-50">
-                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl max-w-xs w-full space-y-4 shadow-2xl">
-                    <div class="text-center">
-                        <h3 class="text-base font-black text-white">Confirmar Aplicação</h3>
-                        <p id="txtSubtituloModalRapido" class="text-xs text-slate-400 mt-1">Registrando...</p>
-                        <p id="txtPrevisaoModalRapido" class="text-xs text-indigo-400 font-semibold mt-1 bg-indigo-500/10 py-1 rounded-lg"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1 text-center">Peso Real Hoje (kg)</label>
-                        <input type="number" step="0.1" id="inputPesoRapido" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-center text-lg font-bold text-white outline-none focus:border-emerald-400" required>
-                    </div>
-                    <select id="inputSintomaRapido" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                        <option value="Sem Sintomas">Sem Sintomas</option>
-                        <option value="Náusea Leve">Náusea Leve</option>
-                        <option value="Muita Saciedade">Muita Saciedade</option>
-                        <option value="Constipação">Constipação</option>
-                        <option value="Fadiga">Fadiga</option>
-                    </select>
-                    
-                    <div class="space-y-1">
-                        <label class="block text-[11px] text-slate-400 text-center font-bold">📸 Foto de Evolução Corporal (Opcional)</label>
-                        <input type="file" id="inputFotoRapida" accept="image/*" class="w-full text-xs text-slate-400 bg-slate-900 border border-slate-700 rounded-xl p-2 outline-none">
-                        <p id="lblStatusUploadFoto" class="text-[9px] text-center text-amber-400 hidden">Processando imagem física...</p>
-                    </div>
+        <!-- ══════════════════════════════
+             PAINEL DE ESTOQUE — NOVO
+        ══════════════════════════════ -->
+        <section class="bg-gradient-to-br from-slate-800 to-slate-850 p-4 rounded-2xl border border-indigo-500/10 shadow-xl space-y-4">
 
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <button onclick="fecharModalRapido()" class="py-2.5 bg-slate-700 text-slate-300 rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
-                        <button onclick="confirmarInjecaoRapida()" class="py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 rounded-xl text-xs font-black shadow-lg cursor-pointer">Salvar</button>
-                    </div>
-                </div>
-            </section>
+            <!-- Resumo rápido -->
+            <div class="flex justify-between text-center bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 text-xs">
+                <div><span class="text-[9px] text-slate-500 block font-bold uppercase">Tratamento</span><span id="resTotalDoses" class="font-bold text-indigo-400">0 sem</span></div>
+                <div><span class="text-[9px] text-slate-500 block font-bold uppercase">Dose Atual</span><span id="resDoseConfigurada" class="font-bold text-slate-300">--</span></div>
+                <div><span class="text-[9px] text-slate-500 block font-bold uppercase">Estoque Até</span><span id="resDataTermino" class="font-bold text-slate-300">--</span></div>
+            </div>
 
-            <section class="bg-gradient-to-br from-slate-800 to-slate-850 p-4 rounded-2xl border border-indigo-500/10 shadow-xl space-y-4">
-                <div class="flex justify-between text-center bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 text-xs">
-                    <div><span class="text-[9px] text-slate-500 block font-bold uppercase">Tratamento</span><span id="resTotalDoses" class="font-bold text-indigo-400">0 sem</span></div>
-                    <div><span class="text-[9px] text-slate-500 block font-bold uppercase">Dose Atual</span><span id="resDoseConfigurada" class="font-bold text-slate-300">--</span></div>
-                    <div><span class="text-[9px] text-slate-500 block font-bold uppercase">Estoque Até</span><span id="resDataTermino" class="font-bold text-slate-300">--</span></div>
-                </div>
-                
-                <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800/80 space-y-2">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Estoque Físico de Ampolas (15mg)</span>
-                    <div id="containerAmpolasVisuais" class="flex flex-wrap gap-3 justify-start items-center pt-1"></div>
-                </div>
+            <!-- ══ ALERTA DE ESTOQUE CRÍTICO ══ -->
+            <div id="alertaEstoqueCritico"
+                class="hidden items-center gap-2 bg-rose-500/10 border border-rose-500/30 rounded-xl px-3 py-2.5 text-xs font-bold text-rose-300">
+                <span class="text-base">🚨</span>
+                <span id="txtAlertaEstoque">Estoque crítico!</span>
+            </div>
 
-                <div class="bg-slate-900/40 p-2 rounded-xl border border-slate-800/80 text-[11px] space-y-1">
-                    <div class="flex justify-between text-[10px] text-slate-400"><span class="font-medium">Rendimento Estimado Restante:</span><span id="lblRendimentoAmpola" class="font-bold text-indigo-300">--</span></div>
-                    <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden"><div id="barraAmpola" class="bg-indigo-500 h-full w-0 transition-all"></div></div>
-                </div>
-                <div id="boxStatusMeta" class="p-2.5 rounded-xl text-[11px] border flex items-center gap-2 bg-slate-900/40 border-slate-700"></div>
-                <div id="boxAlertaClinico" class="p-2.5 rounded-xl text-[11px] border flex items-center gap-2 bg-amber-500/10 border-amber-500/20 text-amber-400 hidden"></div>
-            </section>
-
-            <section class="bg-gradient-to-br from-slate-800 to-slate-850 p-4 rounded-2xl border border-blue-500/10 shadow-xl space-y-3">
+            <!-- ══ AMPOLAS VISUAIS MELHORADAS ══ -->
+            <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800/80 space-y-3">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-semibold text-blue-400 uppercase tracking-wider flex items-center gap-1">💧 Controle de Hidratação</h3>
-                    <button onclick="resetarAguaManual()" class="text-[10px] bg-slate-900 px-2 py-0.5 rounded border border-slate-700 text-slate-400 active:bg-slate-950">Zerar</button>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Estoque Físico de Ampolas (15 mg)</span>
+                    <span id="lblEstoqueResumo" class="text-[10px] font-bold text-indigo-300">--</span>
                 </div>
-                <div class="grid grid-cols-2 gap-2 bg-slate-900/50 p-2.5 rounded-xl border border-slate-800 text-center">
-                    <div><span class="text-[9px] text-slate-500 uppercase font-bold block">Meta Calculada</span><span id="lblMetaAguaCalculada" class="text-base font-black text-white">--</span></div>
-                    <div><span class="text-[9px] text-slate-500 uppercase font-bold block">Falta Tomar</span><span id="lblMetaAguaRestante" class="text-base font-black text-blue-400">--</span></div>
-                </div>
-                <div class="space-y-1">
-                    <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800"><div id="barraAguaProgresso" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full w-0 transition-all duration-300"></div></div>
-                    <div class="flex justify-between text-[9px] text-slate-500 font-bold px-0.5"><span id="lblAguaTomadaAcumulada">Ingerido: 0 ml</span><span id="lblPorcentagemAgua">0%</span></div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="adicionarAgua(250)" class="py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 rounded-xl text-xs font-bold text-blue-300 active:scale-98 transition-all cursor-pointer">+ 250ml</button>
-                    <button onclick="adicionarAgua(500)" class="py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 rounded-xl text-xs font-bold text-blue-200 active:scale-98 transition-all cursor-pointer">+ 500ml</button>
-                </div>
-            </section>
 
-            <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/60 shadow-xl space-y-3">
-                <h3 class="text-sm font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">🎯 Métricas e Economia Real</h3>
-                <div class="grid grid-cols-3 gap-2">
-                    <div class="bg-slate-900/80 p-2.5 rounded-xl text-center border border-slate-800 col-span-1">
-                        <span class="text-[10px] text-slate-400 block mb-0.5">🥩 Proteína</span>
-                        <span id="nutriProteina" class="text-sm font-black text-white">--</span>
+                <!-- Grid de ampolas -->
+                <div id="containerAmpolasVisuais" class="flex flex-wrap gap-2 justify-start items-end pt-1"></div>
+
+                <!-- Legenda dos níveis -->
+                <div class="flex items-center gap-3 text-[9px] text-slate-500 pt-1 border-t border-slate-800/60">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-emerald-500 inline-block"></span>Cheio (>50%)</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-amber-500 inline-block"></span>Médio (20–50%)</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-rose-500 inline-block"></span>Crítico (<20%)</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-slate-700 inline-block"></span>Vazio</span>
+                </div>
+            </div>
+
+            <!-- Barra de rendimento do vial em uso -->
+            <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800/80 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] text-slate-400 font-medium">Vial em uso</span>
+                    <span id="lblVialEmUso" class="text-[10px] font-bold text-indigo-300">--</span>
+                </div>
+                <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                    <div id="barraAmpola" class="h-full w-0 transition-all duration-500 rounded-full bg-indigo-500"></div>
+                </div>
+                <div class="flex justify-between text-[9px] text-slate-500">
+                    <span id="lblRendimentoAmpola">--</span>
+                    <span id="lblMgRestantesVial">--</span>
+                </div>
+            </div>
+
+            <!-- Projeção de consumo futuro por ampola -->
+            <div id="containerProjecaoVials" class="space-y-1.5"></div>
+
+            <div id="boxStatusMeta"
+                class="p-2.5 rounded-xl text-[11px] border flex items-center gap-2 bg-slate-900/40 border-slate-700"></div>
+            <div id="boxAlertaClinico"
+                class="p-2.5 rounded-xl text-[11px] border flex items-center gap-2 bg-amber-500/10 border-amber-500/20 text-amber-400 hidden"></div>
+        </section>
+
+        <!-- ══════════════════════════════
+             HIDRATAÇÃO
+        ══════════════════════════════ -->
+        <section class="bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-2xl border border-blue-500/15 shadow-xl space-y-3">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-sm font-semibold text-blue-400 uppercase tracking-wider">💧 Hidratação</h3>
+                    <p class="text-[10px] text-slate-500 mt-0.5">Meta baseada no seu peso atual</p>
+                </div>
+                <button onclick="resetarAguaManual()"
+                    class="text-[10px] bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700 text-slate-400 active:bg-slate-950 cursor-pointer">Zerar dia</button>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="relative flex-shrink-0 w-20 h-20">
+                    <svg viewBox="0 0 80 80" class="w-full h-full -rotate-90">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#0f172a" stroke-width="7"/>
+                        <circle id="anelAgua" cx="40" cy="40" r="32" fill="none" stroke="url(#gradAgua)"
+                            stroke-width="7" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"
+                            style="transition: stroke-dashoffset 0.5s ease"/>
+                        <defs>
+                            <linearGradient id="gradAgua" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#3b82f6"/>
+                                <stop offset="100%" stop-color="#22d3ee"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span id="lblPorcentagemAgua" class="text-base font-black text-white leading-none">0%</span>
+                        <span class="text-[8px] text-slate-400 mt-0.5">do dia</span>
                     </div>
-                    <div class="bg-slate-900/80 p-2.5 rounded-xl text-center border border-slate-800 col-span-1">
-                        <span class="text-[10px] text-slate-400 block mb-0.5">🥗 Fibras</span>
-                        <span class="text-sm font-black text-white">25g a 30g</span>
+                </div>
+                <div class="flex-1 space-y-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-slate-900/70 rounded-xl p-2 border border-slate-800 text-center">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Meta</span>
+                            <span id="lblMetaAguaCalculada" class="text-sm font-black text-white">--</span>
+                        </div>
+                        <div class="bg-blue-950/40 rounded-xl p-2 border border-blue-800/30 text-center">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Falta</span>
+                            <span id="lblMetaAguaRestante" class="text-sm font-black text-blue-300">--</span>
+                        </div>
                     </div>
-                    <div class="bg-slate-900/80 p-2.5 rounded-xl text-center border border-slate-800 col-span-1 grid grid-rows-2 gap-0.5 justify-center">
-                        <div><span class="text-[8px] text-slate-400 block">Eliminado</span><span id="lblTotalEliminado" class="text-[11px] font-black text-emerald-400">--</span></div>
-                        <div class="border-t border-slate-700/50 pt-0.5"><span class="text-[8px] text-slate-400 block">Média</span><span id="lblMediaSemanal" class="text-[11px] font-black text-indigo-400">--</span></div>
+                    <div class="bg-slate-900/50 rounded-xl px-3 py-1.5 border border-slate-800 flex justify-between items-center">
+                        <span class="text-[10px] text-slate-400">Ingerido hoje</span>
+                        <span id="lblAguaTomadaAcumulada" class="text-[11px] font-black text-cyan-300">0 ml</span>
                     </div>
                 </div>
+            </div>
+            <div class="space-y-1.5">
+                <div class="relative w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800/80">
+                    <div id="barraAguaProgresso"
+                        class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full w-0 transition-all duration-500 rounded-full"></div>
+                    <div class="absolute top-0 h-full w-px bg-slate-700/60" style="left:25%"></div>
+                    <div class="absolute top-0 h-full w-px bg-slate-700/60" style="left:50%"></div>
+                    <div class="absolute top-0 h-full w-px bg-slate-700/60" style="left:75%"></div>
+                </div>
+                <div class="flex justify-between text-[9px] text-slate-600 font-bold px-0.5">
+                    <span>0</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-4 gap-2">
+                <button onclick="adicionarAgua(150)" class="py-2.5 bg-blue-600/10 border border-blue-500/20 rounded-xl text-[11px] font-bold text-blue-300 active:scale-95 transition-all cursor-pointer">150ml</button>
+                <button onclick="adicionarAgua(250)" class="py-2.5 bg-blue-600/15 border border-blue-500/25 rounded-xl text-[11px] font-bold text-blue-300 active:scale-95 transition-all cursor-pointer">250ml</button>
+                <button onclick="adicionarAgua(350)" class="py-2.5 bg-blue-600/20 border border-blue-500/35 rounded-xl text-[11px] font-bold text-blue-200 active:scale-95 transition-all cursor-pointer">350ml</button>
+                <button onclick="adicionarAgua(500)" class="py-2.5 bg-blue-600/25 border border-blue-500/45 rounded-xl text-[11px] font-bold text-blue-200 active:scale-95 transition-all cursor-pointer">500ml</button>
+            </div>
+            <div id="boxStatusAgua"
+                class="hidden items-center gap-2 justify-center bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-2 text-[11px] font-bold text-emerald-300">
+                🎉 Meta de hidratação atingida!
+            </div>
+        </section>
 
-                <div class="bg-indigo-950/20 p-2.5 rounded-xl border border-indigo-500/10 grid grid-cols-2 gap-2 text-xs">
-                    <div class="border-r border-slate-700/40 pr-1">
-                        <span class="text-indigo-400 block text-[9px] uppercase font-bold">Investimento Real Total</span>
-                        <span id="financeiroGastoTotal" class="text-sm font-black text-white">R$ 0,00</span>
-                        <p class="text-[8px] text-slate-500 mt-0.5">Gasto real acumulado</p>
+        <!-- ══════════════════════════════
+             MÉTRICAS E METABOLISMO — MELHORADO
+        ══════════════════════════════ -->
+        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/60 shadow-xl space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-semibold text-emerald-400 uppercase tracking-wider">🎯 Métricas e Metabolismo</h3>
+                <!-- Badge do perfil -->
+                <span id="badgePerfilMetabolico"
+                    class="text-[9px] font-bold px-2 py-0.5 rounded-lg border bg-slate-900 border-slate-700 text-slate-400">
+                    -- • --
+                </span>
+            </div>
+
+            <!-- Nutrição rápida -->
+            <div class="grid grid-cols-3 gap-2">
+                <div class="bg-slate-900/80 p-2.5 rounded-xl text-center border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">🥩 Proteína</span>
+                    <span id="nutriProteina" class="text-sm font-black text-white">--</span>
+                    <span class="text-[8px] text-slate-500 block">por dia</span>
+                </div>
+                <div class="bg-slate-900/80 p-2.5 rounded-xl text-center border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">🥗 Fibras</span>
+                    <span class="text-sm font-black text-white">25–30g</span>
+                    <span class="text-[8px] text-slate-500 block">por dia</span>
+                </div>
+                <div class="bg-slate-900/80 p-2.5 rounded-xl text-center border border-slate-800 grid grid-rows-2 gap-0.5 justify-center">
+                    <div><span class="text-[8px] text-slate-400 block">Eliminado</span><span id="lblTotalEliminado" class="text-[11px] font-black text-emerald-400">--</span></div>
+                    <div class="border-t border-slate-700/50 pt-0.5"><span class="text-[8px] text-slate-400 block">Média</span><span id="lblMediaSemanal" class="text-[11px] font-black text-indigo-400">--</span></div>
+                </div>
+            </div>
+
+            <!-- ▸▸ NOVO: Breakdown do TDEE -->
+            <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800 space-y-2">
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div>
+                        <span class="text-[9px] text-slate-500 block uppercase font-bold">TMB</span>
+                        <span id="nutriTMB" class="text-xs font-black text-slate-300">-- kcal</span>
+                        <span class="text-[8px] text-slate-600 block">basal</span>
                     </div>
-                    <div class="pl-1">
-                        <span class="text-emerald-400 block text-[9px] uppercase font-bold">Custo por kg Eliminado</span>
-                        <span id="financeiroPrecoPorKg" class="text-sm font-black text-emerald-400">R$ 0,00</span>
-                        <p class="text-[8px] text-slate-500 mt-0.5">Retorno real do investimento</p>
+                    <div class="border-x border-slate-700/40">
+                        <span class="text-[9px] text-slate-500 block uppercase font-bold">TDEE</span>
+                        <span id="nutriGastoTotal" class="text-xs font-black text-indigo-400">-- kcal</span>
+                        <span id="lblNivelAtividade" class="text-[8px] text-slate-600 block">--</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] text-slate-500 block uppercase font-bold">Alvo</span>
+                        <span id="nutriCaloriasAlvo" class="text-xs font-black text-emerald-400">-- kcal</span>
+                        <span class="text-[8px] text-slate-600 block">consumo</span>
                     </div>
                 </div>
-
-                <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800 grid grid-cols-2 gap-2 text-xs">
-                    <div class="border-r border-slate-700/40 pr-1"><span class="text-slate-400 block text-[10px] uppercase font-bold">Consumo Recomendado</span><span id="nutriCaloriasAlvo" class="text-sm font-black text-emerald-400">-- kcal</span></div>
-                    <div class="pl-1"><span class="text-slate-400 block text-[10px] uppercase font-bold">Seu Gasto Diário Total</span><span id="nutriGastoTotal" class="text-sm font-black text-indigo-400">-- kcal</span></div>
+                <!-- Barra de déficit -->
+                <div class="space-y-0.5">
+                    <div class="flex justify-between text-[9px] text-slate-500">
+                        <span>Déficit calórico diário</span>
+                        <span id="lblDeficitCalorico" class="font-bold text-amber-400">-- kcal</span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                        <div id="barraDeficit" class="h-full bg-amber-500 w-0 transition-all duration-500 rounded-full"></div>
+                    </div>
+                    <div class="text-[8px] text-slate-600 text-right">Déficit ideal: 500–750 kcal/dia</div>
                 </div>
-            </section>
+            </div>
 
-            <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl">
-                <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider mb-2">📸 Diário Visual de Evolução</h2>
-                <div id="containerGaleriaFotos" class="flex gap-3 overflow-x-scroll pb-2 pt-1 snap-x scrollbar-none" style="-webkit-overflow-scrolling: touch;"></div>
-            </section>
+            <!-- ▸▸ NOVO: IMC atual -->
+            <div id="boxIMC" class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800 hidden">
+                <div class="flex justify-between items-center mb-1.5">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">IMC Atual</span>
+                    <span id="lblIMCValor" class="text-xs font-black text-white">--</span>
+                </div>
+                <!-- Régua de IMC -->
+                <div class="relative w-full h-3 rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-emerald-500 via-yellow-500 to-rose-600">
+                    <div id="marcadorIMC"
+                        class="absolute top-0 h-full w-1 bg-white rounded-full shadow-md transition-all duration-700"
+                        style="left: 0%"></div>
+                </div>
+                <div class="flex justify-between text-[8px] text-slate-500 mt-0.5 font-bold">
+                    <span>16</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
+                </div>
+                <div class="text-[9px] text-center font-bold mt-1" id="lblClasseIMC">--</div>
+            </div>
+        </section>
 
-            <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl">
-                <div class="mb-1"><h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider">📅 Próximas Aplicações</h2><p id="txtAvisoRodizio" class="text-[10px] text-blue-400 font-bold mt-0.5">--</p></div>
-                <div id="calendarioContainer" class="flex gap-2 overflow-x-scroll pb-2 pt-1 snap-x max-w-full" style="-webkit-overflow-scrolling: touch;"></div>
-            </section>
+        <!-- ══════════════════════════════
+             PRÓXIMAS APLICAÇÕES
+        ══════════════════════════════ -->
+        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider">📅 Próximas Aplicações</h2>
+                    <p id="txtAvisoRodizio" class="text-[10px] text-blue-400 font-semibold mt-0.5">--</p>
+                </div>
+                <div id="badgeProximaDose" class="hidden bg-indigo-500/15 border border-indigo-500/30 rounded-xl px-2.5 py-1.5 text-center">
+                    <span class="text-[9px] text-indigo-300 font-bold uppercase block">Próxima em</span>
+                    <span id="lblDiasRestantes" class="text-base font-black text-indigo-300">-- dias</span>
+                </div>
+            </div>
+            <div id="calendarioContainer"
+                class="flex gap-2.5 overflow-x-auto pb-2 pt-0.5 snap-x snap-mandatory"
+                style="-webkit-overflow-scrolling: touch; scrollbar-width: none;"></div>
+        </section>
 
-            <section id="cardMetaProgresso" class="bg-gradient-to-br from-slate-800 to-slate-850 p-4 rounded-2xl border border-slate-700/50 shadow-xl hidden">
-                <div class="flex justify-between items-center mb-1.5"><span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Progresso Geral</span><span id="txtRestamQuilos" class="text-xs font-bold text-emerald-400"></span></div>
-                <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-700/50"><div id="barraMeta" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full w-0 transition-all duration-500"></div></div>
-                <div class="flex justify-between items-center text-[10px] text-slate-500 mt-1"><span id="txtPesoInicialMeta">Início: -- kg</span><span id="txtPorcentagemMeta" class="text-slate-300 font-bold">0%</span><span id="txtPesoAlvoMeta">Meta: -- kg</span></div>
-            </section>
+        <!-- ══════════════════════════════
+             PROGRESSO GERAL
+        ══════════════════════════════ -->
+        <section id="cardMetaProgresso"
+            class="bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-2xl border border-slate-700/50 shadow-xl hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider">🏆 Progresso Geral</h2>
+                    <p id="txtRestamQuilos" class="text-[11px] font-bold text-emerald-400 mt-0.5"></p>
+                </div>
+                <div id="badgeMetaStatus" class="px-2.5 py-1 rounded-xl text-[10px] font-bold border"></div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="relative flex-shrink-0 w-24 h-24">
+                    <svg viewBox="0 0 80 80" class="w-full h-full -rotate-90">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#1e293b" stroke-width="8"/>
+                        <circle id="anelMeta" cx="40" cy="40" r="32" fill="none" stroke="url(#gradMeta)"
+                            stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"
+                            style="transition: stroke-dashoffset 0.8s ease"/>
+                        <defs>
+                            <linearGradient id="gradMeta" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#10b981"/>
+                                <stop offset="100%" stop-color="#2dd4bf"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span id="txtPorcentagemMeta" class="text-xl font-black text-white leading-none">0%</span>
+                        <span class="text-[9px] text-slate-400 font-semibold mt-0.5">concluído</span>
+                    </div>
+                </div>
+                <div class="flex-1 space-y-2">
+                    <div class="flex justify-between items-center bg-slate-900/60 rounded-xl px-3 py-2 border border-slate-800">
+                        <div>
+                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Peso Inicial</span>
+                            <span id="txtPesoInicialMeta" class="text-sm font-black text-slate-300">-- kg</span>
+                        </div>
+                        <span class="text-slate-600 text-lg">→</span>
+                        <div class="text-right">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Meta</span>
+                            <span id="txtPesoAlvoMeta" class="text-sm font-black text-rose-400">-- kg</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-slate-900/60 rounded-xl px-2.5 py-2 border border-emerald-900/40">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Perdido</span>
+                            <span id="lblKgPerdidoMeta" class="text-sm font-black text-emerald-400">-- kg</span>
+                        </div>
+                        <div class="bg-slate-900/60 rounded-xl px-2.5 py-2 border border-slate-800">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Falta perder</span>
+                            <span id="lblKgFaltaMeta" class="text-sm font-black text-amber-400">-- kg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <div class="relative w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-slate-800">
+                    <div id="barraMeta" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full w-0 transition-all duration-700 rounded-full"></div>
+                    <div class="absolute top-0 h-full w-px bg-slate-700" style="left:25%"></div>
+                    <div class="absolute top-0 h-full w-px bg-slate-700" style="left:50%"></div>
+                    <div class="absolute top-0 h-full w-px bg-slate-700" style="left:75%"></div>
+                </div>
+                <div class="flex justify-between text-[9px] text-slate-600 font-bold px-0.5">
+                    <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+                </div>
+            </div>
+            <div id="boxEstimativaMeta"
+                class="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3 py-2 text-[11px] text-indigo-300 hidden">
+                <span>🗓️</span><span id="txtEstimativaMeta">--</span>
+            </div>
+        </section>
 
-            <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl"><div class="w-full h-48"><canvas id="graficoPeso"></canvas></div></section>
+        <!-- ══════════════════════════════
+             GRÁFICO
+        ══════════════════════════════ -->
+        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider">📈 Evolução do Peso</h2>
+                <div class="flex items-center gap-3 text-[10px] text-slate-400">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-[2px] bg-emerald-400 rounded"></span>Real</span>
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-[2px] bg-indigo-400 rounded opacity-70"></span>Projeção</span>
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-[2px] bg-rose-400 rounded opacity-70"></span>Meta</span>
+                </div>
+            </div>
+            <div class="w-full" style="height: 220px;"><canvas id="graficoPeso"></canvas></div>
+        </section>
 
-            <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl"><h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Doses Lançadas</h2><div id="listaRegistros" class="space-y-1.5 max-h-44 overflow-y-auto pr-1"></div></section>
-        </main>
-    </div>
+        <!-- ══════════════════════════════
+             HISTÓRICO DE DOSES
+        ══════════════════════════════ -->
+        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider">💉 Doses Lançadas</h2>
+                    <p id="lblTotalRegistros" class="text-[10px] text-slate-500 mt-0.5">-- aplicações registradas</p>
+                </div>
+                <div id="badgeUltimaDose" class="hidden bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-center">
+                    <span class="text-[9px] text-slate-500 uppercase font-bold block">Última</span>
+                    <span id="lblDataUltimaDose" class="text-[11px] font-black text-slate-300">--</span>
+                </div>
+            </div>
+            <div id="listaRegistros" class="space-y-2 max-h-64 overflow-y-auto pr-0.5"
+                style="scrollbar-width: thin; scrollbar-color: #334155 transparent;"></div>
+        </section>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { initializeFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    </main>
+</div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCXNvsYy0XyKazOxshcI5f2TtbpK3dVASI",
-            authDomain: "mounjaro-tracker-a67c4.firebaseapp.com",
-            projectId: "mounjaro-tracker-a67c4",
-            storageBucket: "mounjaro-tracker-a67c4.firebasestorage.app",
-            messagingSenderId: "240121473217",
-            appId: "1:240121473217:web:3c8db746886489736bcc40"
-        };
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+    const firebaseConfig = {
+        apiKey: "AIzaSyCXNvsYy0XyKazOxshcI5f2TtbpK3dVASI",
+        authDomain: "mounjaro-tracker-a67c4.firebaseapp.com",
+        projectId: "mounjaro-tracker-a67c4",
+        storageBucket: "mounjaro-tracker-a67c4.firebasestorage.app",
+        messagingSenderId: "240121473217",
+        appId: "1:240121473217:web:3c8db746886489736bcc40"
+    };
 
-        let usuarioAtual = null;
-        let registros = [];
-        let configApp = { pesoInicial: null, pesoMeta: null, ampolas: 1, doseAlvo: 2.5, altura: null, idade: null, precoAmpola: null, aguaLog: {} };
-        let chartInstance = null;
-        let doseTemporariaParaSalvar = null;
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
 
-        const listaMembrosRodizio = [
-            { nome: 'Abdômen (Esquerdo)', sigla: 'Abd Esq' }, { nome: 'Coxa Direita', sigla: 'Cox Dir' },
-            { nome: 'Abdômen (Direito)', sigla: 'Abd Dir' }, { nome: 'Coxa Esquerda', sigla: 'Cox Esq' }
-        ];
+    let usuarioAtual = null;
+    let registros    = [];
+    let configApp    = {
+        pesoInicial: null, pesoMeta: null,
+        ampolas: 1, doseAlvo: 2.5,
+        altura: null, idade: null,
+        sexo: 'M',          // ▸▸ NOVO
+        atividade: 1.2,     // ▸▸ NOVO
+        aguaLog: {}
+    };
+    let chartInstance = null;
+    let doseTemporariaParaSalvar = null;
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                usuarioAtual = user;
-                document.getElementById('telaLogin').classList.add('hidden');
-                document.getElementById('conteudoApp').classList.remove('hidden');
-                document.getElementById('lblUserEmail').innerText = user.email;
-                await carregarDadosNuvem();
+    const listaMembrosRodizio = [
+        { nome: 'Abdômen (Esquerdo)', sigla: 'Abd Esq' },
+        { nome: 'Coxa Direita',       sigla: 'Cox Dir' },
+        { nome: 'Abdômen (Direito)',  sigla: 'Abd Dir' },
+        { nome: 'Coxa Esquerda',      sigla: 'Cox Esq' }
+    ];
+
+    /* ── NOMES DOS NÍVEIS DE ATIVIDADE ── */
+    const nomesAtividade = {
+        '1.2':   'Sedentário',
+        '1.375': 'Lev. Ativo',
+        '1.55':  'Moderado',
+        '1.725': 'Muito Ativo',
+        '1.9':   'Ext. Ativo'
+    };
+
+    /* ════════════════════════════
+       HELPER: mg → UI na seringa
+       Tabela confirmada pelo usuário:
+         2.5mg = 8UI | 5mg = 16UI | 7.5mg = 24UI | 10mg = 32UI
+    ═══════════════════════════ */
+    const tabelaUI = { 2.5: 8, 5.0: 16, 7.5: 24, 10.0: 32 };
+
+    function mgParaUI(mg) {
+        const n = parseFloat(mg);
+        return tabelaUI[n] ?? Math.round(n * 3.2);
+    }
+
+    /** Formata exibição: "2.5 mg • 8 UI" */
+    function formatarDose(mgOuStr) {
+        const n = parseFloat(mgOuStr);
+        if (isNaN(n)) return String(mgOuStr);
+        const ui = mgParaUI(n);
+        return `${n.toFixed(1)} mg • ${ui} UI`;
+    }
+
+    /* ════════════════════════════
+       AUTH
+    ═══════════════════════════ */
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            usuarioAtual = user;
+            document.getElementById('telaLogin').classList.add('hidden');
+            document.getElementById('conteudoApp').classList.remove('hidden');
+            document.getElementById('lblUserEmail').innerText = user.email;
+            await carregarDadosNuvem();
+        } else {
+            usuarioAtual = null;
+            document.getElementById('telaLogin').classList.remove('hidden');
+            document.getElementById('conteudoApp').classList.add('hidden');
+        }
+    });
+
+    window.toggleSenhaVisivel = function() {
+        const inp = document.getElementById('loginSenha');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+    };
+
+    window.fazerLogin = function() {
+        const email = document.getElementById('loginEmail').value;
+        const senha = document.getElementById('loginSenha').value;
+        setPersistence(auth, browserLocalPersistence)
+            .then(() => signInWithEmailAndPassword(auth, email, senha))
+            .catch(err => alert(`Erro: ${err.message}`));
+    };
+
+    window.fazerLogout = function() { signOut(auth); };
+
+    /* ════════════════════════════
+       FIRESTORE
+    ═══════════════════════════ */
+    async function carregarDadosNuvem() {
+        if (!usuarioAtual) return;
+        try {
+            const docRef  = doc(db, "usuarios", usuarioAtual.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const dados = docSnap.data();
+                registros = dados.registros || [];
+                configApp = {
+                    pesoInicial: null, pesoMeta: null,
+                    ampolas: 1, doseAlvo: 2.5,
+                    altura: null, idade: null,
+                    sexo: 'M', atividade: 1.2,
+                    aguaLog: {},
+                    ...dados.configApp
+                };
+                if (!configApp.aguaLog)  configApp.aguaLog  = {};
+                if (!configApp.sexo)     configApp.sexo     = 'M';
+                if (!configApp.atividade) configApp.atividade = 1.2;
             } else {
-                usuarioAtual = null;
-                document.getElementById('telaLogin').classList.remove('hidden');
-                document.getElementById('conteudoApp').classList.add('hidden');
+                await salvarDadosNuvem();
+            }
+            atualizarTudo();
+        } catch (err) { console.error(err); }
+    }
+
+    async function salvarDadosNuvem() {
+        if (!usuarioAtual) return;
+        try {
+            await setDoc(doc(db, "usuarios", usuarioAtual.uid), { registros, configApp });
+        } catch (err) { alert("Erro ao salvar: " + err.message); }
+    }
+
+    /* ════════════════════════════
+       MODAL CONFIG
+    ═══════════════════════════ */
+    window.toggleConfigModal = function() {
+        const modal = document.getElementById('modalConfig');
+        modal.classList.toggle('hidden');
+        if (!modal.classList.contains('hidden')) {
+            document.getElementById('configPesoInicial').value = configApp.pesoInicial || '';
+            document.getElementById('configPesoMeta').value    = configApp.pesoMeta    || '';
+            document.getElementById('configAmpolas').value     = configApp.ampolas;
+            document.getElementById('configDoseAlvo').value    = configApp.doseAlvo;
+            document.getElementById('configAltura').value      = configApp.altura  || '';
+            document.getElementById('configIdade').value       = configApp.idade   || '';
+            document.getElementById('configSexo').value        = configApp.sexo    || 'M';
+            document.getElementById('configAtividade').value   = configApp.atividade || 1.2;
+        }
+    };
+
+    window.salvarConfiguracoes = function() {
+        configApp.pesoInicial = parseFloat(document.getElementById('configPesoInicial').value) || null;
+        configApp.pesoMeta    = parseFloat(document.getElementById('configPesoMeta').value)    || null;
+        configApp.ampolas     = parseInt(document.getElementById('configAmpolas').value)        || 1;
+        configApp.doseAlvo    = parseFloat(document.getElementById('configDoseAlvo').value)    || 2.5;
+        configApp.altura      = parseInt(document.getElementById('configAltura').value)         || null;
+        configApp.idade       = parseInt(document.getElementById('configIdade').value)          || null;
+        configApp.sexo        = document.getElementById('configSexo').value;                    // ▸▸ NOVO
+        configApp.atividade   = parseFloat(document.getElementById('configAtividade').value) || 1.2; // ▸▸ NOVO
+
+        toggleConfigModal();
+        salvarDadosNuvem().then(() => atualizarTudo());
+    };
+
+    window.deletarRegistroUnico = async function(id) {
+        if (confirm("Tem certeza que deseja apagar este registro?")) {
+            registros = registros.filter(r => r.id !== id);
+            await salvarDadosNuvem();
+            atualizarTudo();
+        }
+    };
+
+    /* ════════════════════════════
+       ÁGUA
+    ═══════════════════════════ */
+    function obterChaveDataHoje() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    window.adicionarAgua = async function(ml) {
+        const hoje = obterChaveDataHoje();
+        if (!configApp.aguaLog) configApp.aguaLog = {};
+        configApp.aguaLog[hoje] = (configApp.aguaLog[hoje] || 0) + ml;
+        await salvarDadosNuvem();
+        processarPainelAgua();
+    };
+
+    window.resetarAguaManual = async function() {
+        const hoje = obterChaveDataHoje();
+        if (!configApp.aguaLog) configApp.aguaLog = {};
+        configApp.aguaLog[hoje] = 0;
+        await salvarDadosNuvem();
+        processarPainelAgua();
+    };
+
+    function processarPainelAgua() {
+        const crono = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
+        let pesoRef = configApp.pesoInicial || 80;
+        if (crono.length > 0) pesoRef = crono[crono.length-1].peso;
+
+        const metaMl   = Math.round(pesoRef * 35);
+        const hoje     = obterChaveDataHoje();
+        const tomado   = configApp.aguaLog ? (configApp.aguaLog[hoje] || 0) : 0;
+        const restante = Math.max(0, metaMl - tomado);
+        const atingida = tomado >= metaMl;
+        const pct      = Math.min(100, Math.round((tomado / metaMl) * 100)) || 0;
+
+        document.getElementById('lblMetaAguaCalculada').innerText  = `${(metaMl/1000).toFixed(2)} L`;
+        document.getElementById('lblMetaAguaRestante').innerText   = atingida ? '0 L ✅' : `${(restante/1000).toFixed(2)} L`;
+        document.getElementById('lblAguaTomadaAcumulada').innerText = `${tomado} ml`;
+        document.getElementById('barraAguaProgresso').style.width  = `${pct}%`;
+        document.getElementById('lblPorcentagemAgua').innerText    = `${pct}%`;
+
+        const circ   = 201;
+        const offset = circ - (pct/100)*circ;
+        const anel   = document.getElementById('anelAgua');
+        if (anel) anel.style.strokeDashoffset = offset;
+
+        const box = document.getElementById('boxStatusAgua');
+        atingida ? (box.classList.remove('hidden'), box.classList.add('flex'))
+                 : (box.classList.add('hidden'),    box.classList.remove('flex'));
+    }
+
+    /* ════════════════════════════
+       DOSE HISTÓRICA
+    ═══════════════════════════ */
+    window.inserirDoseHistorica = async function() {
+        const dataS  = document.getElementById('histData').value;
+        const pesoS  = parseFloat(document.getElementById('histPeso').value);
+        const doseS  = document.getElementById('histDose').value;
+        const localS = document.getElementById('histLocal').value;
+        if (!dataS || !pesoS) { alert("Preencha data e peso."); return; }
+        registros.push({
+            id: Date.now(),
+            dataRaw: dataS,
+            dataFormatada: `${dataS.split('-')[2]}/${dataS.split('-')[1]}`,
+            peso: pesoS, dose: doseS, local: localS, sintoma: "Sem Sintomas"
+        });
+        document.getElementById('histData').value = '';
+        document.getElementById('histPeso').value = '';
+        await salvarDadosNuvem();
+        atualizarTudo();
+    };
+
+    /* ════════════════════════════
+       MODAL RÁPIDO
+    ═══════════════════════════ */
+    window.abrirModalRegistroRapido = function(numSem, dataRaw, local, pesoPrevisto) {
+        doseTemporariaParaSalvar = { semana: numSem, dataRaw, local };
+        document.getElementById('txtSubtituloModalRapido').innerText  = `Semana ${numSem} • ${dataRaw.split('-')[2]}/${dataRaw.split('-')[1]} • ${formatarDose(configApp.doseAlvo)}`;
+        document.getElementById('txtPrevisaoModalRapido').innerText   = `📉 Peso previsto: ${pesoPrevisto} kg`;
+        document.getElementById('inputPesoRapido').value              = pesoPrevisto;
+        document.getElementById('modalLancamentoRapido').classList.remove('hidden');
+    };
+
+    window.fecharModalRapido = function() { document.getElementById('modalLancamentoRapido').classList.add('hidden'); };
+
+    window.confirmarInjecaoRapida = async function() {
+        const peso    = parseFloat(document.getElementById('inputPesoRapido').value);
+        const sintoma = document.getElementById('inputSintomaRapido').value;
+        if (!peso) return;
+        registros.push({
+            id: Date.now(),
+            dataRaw: doseTemporariaParaSalvar.dataRaw,
+            dataFormatada: `${doseTemporariaParaSalvar.dataRaw.split('-')[2]}/${doseTemporariaParaSalvar.dataRaw.split('-')[1]}`,
+            peso, dose: configApp.doseAlvo + " mg", doseUI: mgParaUI(configApp.doseAlvo),
+            local: doseTemporariaParaSalvar.local, sintoma
+        });
+        fecharModalRapido();
+        await salvarDadosNuvem();
+        atualizarTudo();
+    };
+
+    /* ════════════════════════════════════════════
+       ▸▸ CÁLCULOS METABÓLICOS CORRIGIDOS E COMPLETOS
+    ═══════════════════════════════════════════════
+
+       Mifflin-St Jeor:
+         Masc: TMB = 10×P + 6.25×H - 5×I + 5
+         Fem:  TMB = 10×P + 6.25×H - 5×I - 161
+
+       Proteína:
+         Masc: 1.6–2.0 g/kg  → usamos 1.8 g/kg
+         Fem:  1.4–1.8 g/kg  → usamos 1.6 g/kg
+
+       Água: 35 ml/kg (universal)
+    ═══════════════════════════════════════════════ */
+    function calcularMetabolismo(pesoAtual, perdaSemanalMedia) {
+        const altura   = configApp.altura   || 170;
+        const idade    = configApp.idade    || 30;
+        const sexo     = configApp.sexo     || 'M';
+        const fAtividade = parseFloat(configApp.atividade) || 1.2;
+
+        /* ── TMB (Mifflin-St Jeor) ── */
+        const fatorSexo = sexo === 'F' ? -161 : 5;
+        const tmb = (10 * pesoAtual) + (6.25 * altura) - (5 * idade) + fatorSexo;
+
+        /* ── TDEE ── */
+        const tdee = tmb * fAtividade;
+
+        /* ── Déficit necessário p/ manter ritmo de perda ── */
+        const deficitDiario = (perdaSemanalMedia * 7700) / 7;
+
+        /* ── Alvo calórico (mínimo 1200 kcal) ── */
+        let alvo = tdee - deficitDiario;
+        if (alvo < 1200) alvo = 1200;
+
+        /* ── Proteína por sexo ── */
+        const fatorProteina = sexo === 'F' ? 1.6 : 1.8;
+        const proteina = Math.round(pesoAtual * fatorProteina);
+
+        /* ── IMC ── */
+        const alturaM = altura / 100;
+        const imc = pesoAtual / (alturaM * alturaM);
+
+        /* ── Atualizar DOM ── */
+        document.getElementById('nutriProteina').innerText   = `${proteina}g`;
+        document.getElementById('nutriTMB').innerText        = `${Math.round(tmb)} kcal`;
+        document.getElementById('nutriGastoTotal').innerText = `${Math.round(tdee)} kcal`;
+        document.getElementById('nutriCaloriasAlvo').innerText = `${Math.round(alvo)} kcal`;
+
+        const nomeFator = nomesAtividade[String(fAtividade)] || 'Sedentário';
+        document.getElementById('lblNivelAtividade').innerText = nomeFator;
+
+        /* Badge de perfil */
+        document.getElementById('badgePerfilMetabolico').innerText =
+            `${sexo === 'F' ? 'Feminino' : 'Masculino'} • ${nomeFator}`;
+
+        /* Déficit */
+        const deficitReal = Math.round(tdee - alvo);
+        document.getElementById('lblDeficitCalorico').innerText = `${deficitReal} kcal`;
+        const pctDeficit = Math.min(100, Math.round((deficitReal / 750) * 100));
+        document.getElementById('barraDeficit').style.width = `${pctDeficit}%`;
+        /* Cor da barra de déficit */
+        const barraD = document.getElementById('barraDeficit');
+        if (deficitReal < 300)       barraD.className = 'h-full bg-blue-500 w-0 transition-all duration-500 rounded-full';
+        else if (deficitReal <= 750) barraD.className = 'h-full bg-amber-500 w-0 transition-all duration-500 rounded-full';
+        else                         barraD.className = 'h-full bg-rose-500 w-0 transition-all duration-500 rounded-full';
+        setTimeout(() => { barraD.style.width = `${pctDeficit}%`; }, 50);
+
+        /* IMC */
+        if (configApp.altura) {
+            document.getElementById('boxIMC').classList.remove('hidden');
+            document.getElementById('lblIMCValor').innerText = imc.toFixed(1);
+
+            const classeIMC = imc < 18.5 ? { txt: 'Abaixo do peso', cor: 'text-blue-400' }
+                : imc < 25 ? { txt: 'Peso normal ✅', cor: 'text-emerald-400' }
+                : imc < 30 ? { txt: 'Sobrepeso', cor: 'text-yellow-400' }
+                : imc < 35 ? { txt: 'Obesidade grau I', cor: 'text-orange-400' }
+                : imc < 40 ? { txt: 'Obesidade grau II', cor: 'text-rose-400' }
+                :            { txt: 'Obesidade grau III', cor: 'text-red-600' };
+
+            const lblClasse = document.getElementById('lblClasseIMC');
+            lblClasse.innerText   = classeIMC.txt;
+            lblClasse.className   = `text-[9px] text-center font-bold mt-1 ${classeIMC.cor}`;
+
+            /* Posição do marcador na régua (IMC 16→40 = escala 0→100%) */
+            const imcMin = 16, imcMax = 40;
+            const posicao = Math.min(100, Math.max(0, ((imc - imcMin) / (imcMax - imcMin)) * 100));
+            document.getElementById('marcadorIMC').style.left = `${posicao}%`;
+        }
+
+        /* Alerta clínico */
+        const alertaBox = document.getElementById('boxAlertaClinico');
+        if (perdaSemanalMedia > 1.5) {
+            alertaBox.innerHTML = `<span>⚠️</span> Perda muito rápida (${perdaSemanalMedia.toFixed(2)} kg/sem). Priorize ingerir ${proteina}g de proteína para preservar massa magra.`;
+            alertaBox.classList.remove('hidden');
+        } else {
+            alertaBox.classList.add('hidden');
+        }
+    }
+
+    /* ════════════════════════════════════════════
+       ▸▸ ESTOQUE DE AMPOLAS — LÓGICA MELHORADA
+    ═══════════════════════════════════════════════ */
+    function calcularEstoqueAmpolas(cronologico) {
+        const totalAmpolas = configApp.ampolas || 1;
+
+        /* Inicializa todas as ampolas cheias (15mg) */
+        let vials = Array.from({ length: totalAmpolas }, (_, i) => ({
+            idx: i,
+            mgInicial: 15.0,
+            mgRestante: 15.0
+        }));
+
+        /* Abate as doses já aplicadas sequencialmente */
+        cronologico.forEach(reg => {
+            let dose = parseFloat(reg.dose) || 2.5;
+            for (let v of vials) {
+                if (v.mgRestante <= 0) continue;
+                if (v.mgRestante >= dose) {
+                    v.mgRestante -= dose;
+                    v.mgRestante  = parseFloat(v.mgRestante.toFixed(4));
+                    dose = 0;
+                    break;
+                } else {
+                    dose -= v.mgRestante;
+                    v.mgRestante = 0;
+                }
             }
         });
 
-        window.fazerLogin = function() {
-            const email = document.getElementById('loginEmail').value;
-            const senha = document.getElementById('loginSenha').value;
-            signInWithEmailAndPassword(auth, email, senha).catch(err => alert(`Erro: ${err.message}`));
-        };
+        return vials;
+    }
 
-        window.fazerLogout = function() { signOut(auth); };
+    function renderizarEstoqueVisual(vials) {
+        const container = document.getElementById('containerAmpolasVisuais');
+        container.innerHTML = '';
 
-        async function carregarDadosNuvem() {
-            if (!usuarioAtual) return;
-            try {
-                const docRef = doc(db, "usuarios", usuarioAtual.uid);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const dados = docSnap.data();
-                    registros = dados.registros || [];
-                    configApp = dados.configApp || { pesoInicial: null, pesoMeta: null, ampolas: 1, doseAlvo: 2.5, altura: null, idade: null, precoAmpola: null };
-                    if(!configApp.aguaLog) configApp.aguaLog = {};
-                } else {
-                    registros = [];
-                    configApp = { pesoInicial: null, pesoMeta: null, ampolas: 1, doseAlvo: 2.5, altura: null, idade: null, precoAmpola: null, aguaLog: {} };
-                    await salvarDadosNuvem();
-                }
-                atualizarTudo();
-            } catch (err) { console.error(err); }
-        }
+        const doseAlvo = configApp.doseAlvo;
+        let vialAtualIdx = -1;
 
-        async function salvarDadosNuvem() {
-            if (!usuarioAtual) return;
-            try {
-                await setDoc(doc(db, "usuarios", usuarioAtual.uid), { registros: registros, configApp: configApp });
-            } catch (err) { alert("Erro ao salvar: " + err.message); }
-        }
+        vials.forEach((v, i) => {
+            const pct = Math.round((v.mgRestante / v.mgInicial) * 100);
+            const isEmpty   = v.mgRestante <= 0;
+            const isCritical = !isEmpty && pct < 20;
+            const isMedium   = !isEmpty && pct >= 20 && pct <= 50;
 
-        window.toggleConfigModal = function() {
-            const modal = document.getElementById('modalConfig');
-            modal.classList.toggle('hidden');
-            if (!modal.classList.contains('hidden')) {
-                document.getElementById('configPesoInicial').value = configApp.pesoInicial || '';
-                document.getElementById('configPesoMeta').value = configApp.pesoMeta || '';
-                document.getElementById('configAmpolas').value = configApp.ampolas;
-                document.getElementById('configDoseAlvo').value = configApp.doseAlvo;
-                document.getElementById('configAltura').value = configApp.altura || '';
-                document.getElementById('configIdade').value = configApp.idade || '';
-                document.getElementById('configPrecoAmpola').value = configApp.precoAmpola || '';
-            }
-        };
+            if (!isEmpty && vialAtualIdx === -1) vialAtualIdx = i;
 
-        window.salvarConfiguracoes = function() {
-            configApp.pesoInicial = parseFloat(document.getElementById('configPesoInicial').value) || null;
-            configApp.pesoMeta = parseFloat(document.getElementById('configPesoMeta').value) || null;
-            configApp.ampolas = parseInt(document.getElementById('configAmpolas').value) || 1;
-            configApp.doseAlvo = parseFloat(document.getElementById('configDoseAlvo').value) || 2.5;
-            configApp.altura = parseInt(document.getElementById('configAltura').value) || null;
-            configApp.idade = parseInt(document.getElementById('configIdade').value) || null;
-            configApp.precoAmpola = parseFloat(document.getElementById('configPrecoAmpola').value) || null;
-            
-            toggleConfigModal();
-            salvarDadosNuvem().then(() => atualizarTudo());
-        };
+            /* Cor do líquido */
+            let corGrad = isEmpty ? 'from-slate-800 to-slate-700'
+                : isCritical ? 'from-rose-700 to-red-500'
+                : isMedium   ? 'from-amber-700 to-yellow-500'
+                :              'from-emerald-700 to-teal-400';
 
-        window.deletarRegistroUnico = async function(idRegistro) {
-            if(confirm("Tem certeza que deseja apagar permanentemente este registro da nuvem?")) {
-                registros = registros.filter(r => r.id !== idRegistro);
-                await salvarDadosNuvem();
-                atualizarTudo();
-            }
-        };
+            /* Doses restantes neste vial */
+            const dosesNeste = Math.floor(v.mgRestante / doseAlvo);
 
-        function obterChaveDataHoje() {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
+            const div = document.createElement('div');
+            div.className = `flex flex-col items-center space-y-1 p-2 rounded-xl border text-center w-[72px]
+                ${isEmpty           ? 'bg-slate-950/40 border-slate-800/40 opacity-50'
+                : isCritical        ? 'bg-rose-950/30 border-rose-700/40 vial-critical'
+                : vialAtualIdx === i ? 'bg-indigo-950/40 border-indigo-500/30'
+                :                     'bg-slate-950/50 border-slate-800'}`;
 
-        window.adicionarAgua = async function(quantidadeMl) {
-            const hoje = obterChaveDataHoje();
-            if(!configApp.aguaLog) configApp.aguaLog = {};
-            configApp.aguaLog[hoje] = (configApp.aguaLog[hoje] || 0) + quantidadeMl;
-            await salvarDadosNuvem();
-            processarPainelAgua();
-        };
+            div.innerHTML = `
+                <span class="text-[8px] font-bold uppercase ${vialAtualIdx === i ? 'text-indigo-300' : 'text-slate-500'}">
+                    Vial ${i+1}${vialAtualIdx === i ? ' ●' : ''}
+                </span>
 
-        window.resetarAguaManual = async function() {
-            const hoje = obterChaveDataHoje();
-            if(!configApp.aguaLog) configApp.aguaLog = {};
-            configApp.aguaLog[hoje] = 0;
-            await salvarDadosNuvem();
-            processarPainelAgua();
-        };
-
-        function processarPainelAgua() {
-            const cronologico = [...registros].sort((a, b) => new Date(a.dataRaw) - new Date(b.dataRaw));
-            let pesoReferencia = configApp.pesoInicial || 80;
-            if (cronologico.length > 0) pesoReferencia = cronologico[cronologico.length - 1].peso;
-
-            const metaMlTotal = Math.round(pesoReferencia * 35);
-            const hoje = obterChaveDataHoje();
-            const tomadoHoje = configApp.aguaLog ? (configApp.aguaLog[hoje] || 0) : 0;
-            let restanteMl = metaMlTotal - tomadoHoje;
-            if(restanteMl < 0) restanteMl = 0;
-
-            document.getElementById('lblMetaAguaCalculada').innerText = `${(metaMlTotal/1000).toFixed(2)} L`;
-            document.getElementById('lblMetaAguaRestante').innerText = restanteMl > 0 ? `${(restanteMl/1000).toFixed(2)} L` : "Meta batida! 🎉";
-            document.getElementById('lblAguaTomadaAcumulada').innerText = `Ingerido: ${tomadoHoje} ml`;
-
-            let porcentagemAgua = Math.min(100, Math.round((tomadoHoje / metaMlTotal) * 100)) || 0;
-            document.getElementById('barraAguaProgresso').style.width = `${porcentagemAgua}%`;
-            document.getElementById('lblPorcentagemAgua').innerText = `${porcentagemAgua}%`;
-        }
-
-        window.inserirDoseHistorica = async function() {
-            const dataS = document.getElementById('histData').value;
-            const pesoS = parseFloat(document.getElementById('histPeso').value);
-            const doseS = document.getElementById('histDose').value;
-            const localS = document.getElementById('histLocal').value;
-
-            if (!dataS || !pesoS) { alert("Preencha data e peso."); return; }
-
-            registros.push({
-                id: Date.now(), dataRaw: dataS,
-                dataFormatada: `${dataS.split('-')[2]}/${dataS.split('-')[1]}`,
-                peso: pesoS, dose: doseS, local: localS, sintoma: "Sem Sintomas", fotoUrl: null
-            });
-
-            document.getElementById('histData').value = '';
-            document.getElementById('histPeso').value = '';
-            await salvarDadosNuvem();
-            atualizarTudo();
-        };
-
-        window.abrirModalRegistroRapido = function(numeroSemana, dataSugeridaRaw, localSugerido, pesoPrevisto) {
-            doseTemporariaParaSalvar = { semana: numeroSemana, dataRaw: dataSugeridaRaw, local: localSugerido };
-            document.getElementById('txtSubtituloModalRapido').innerText = `Semana ${numeroSemana} • Data: ${dataSugeridaRaw.split('-')[2]}/${dataSugeridaRaw.split('-')[1]}`;
-            document.getElementById('txtPrevisaoModalRapido').innerText = `📉 Peso previsto: ${pesoPrevisto} kg`;
-            document.getElementById('inputPesoRapido').value = pesoPrevisto;
-            document.getElementById('inputFotoRapida').value = '';
-            document.getElementById('lblStatusUploadFoto').classList.add('hidden');
-            document.getElementById('modalLancamentoRapido').classList.remove('hidden');
-        };
-
-        window.fecharModalRapido = function() { document.getElementById('modalLancamentoRapido').classList.add('hidden'); };
-
-        function converterFotoParaBase64(fileElement) {
-            return new Promise((resolve, reject) => {
-                if(!fileElement || fileElement.files.length === 0) return resolve(null);
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-                reader.readAsDataURL(fileElement.files[0]);
-            });
-        }
-
-        window.confirmarInjecaoRapida = async function() {
-            const pesoDigitado = parseFloat(document.getElementById('inputPesoRapido').value);
-            const sintomaDigitado = document.getElementById('inputSintomaRapido').value;
-            const inputFoto = document.getElementById('inputFotoRapida');
-            if (!pesoDigitado) return;
-
-            let stringBase64Foto = null;
-            if (inputFoto.files.length > 0) {
-                document.getElementById('lblStatusUploadFoto').classList.remove('hidden');
-                stringBase64Foto = await converterFotoParaBase64(inputFoto);
-            }
-
-            registros.push({
-                id: Date.now(), dataRaw: doseTemporariaParaSalvar.dataRaw,
-                dataFormatada: `${doseTemporariaParaSalvar.dataRaw.split('-')[2]}/${doseTemporariaParaSalvar.dataRaw.split('-')[1]}`,
-                peso: pesoDigitado, dose: configApp.doseAlvo + " mg", local: doseTemporariaParaSalvar.local, sintoma: sintomaDigitado,
-                fotoUrl: stringBase64Foto
-            });
-
-            fecharModalRapido();
-            await salvarDadosNuvem();
-            atualizarTudo();
-        };
-
-        function calcularPainelNutricional(pesoAtual, perdaSemanalMedia) {
-            document.getElementById('nutriProteina').innerText = `${Math.round(pesoAtual * 1.5)}g`;
-
-            const alturaUsuario = configApp.altura || 175;
-            const idadeUsuario = configApp.idade || 26;
-
-            const tmb = (10 * pesoAtual) + (6.25 * alturaUsuario) - (5 * idadeUsuario) + 5;
-            const gastoTotalDiario = tmb * 1.3;
-            document.getElementById('nutriGastoTotal').innerText = `${Math.round(gastoTotalDiario)} kcal`;
-
-            const deficitDiarioNecessario = (perdaSemanalMedia * 7700) / 7;
-            let consumoCaloricoAlvo = gastoTotalDiario - deficitDiarioNecessario;
-            if (consumoCaloricoAlvo < 1200) consumoCaloricoAlvo = 1200;
-            document.getElementById('nutriCaloriasAlvo').innerText = `${Math.round(consumoCaloricoAlvo)} kcal`;
-
-            const alertaBox = document.getElementById('boxAlertaClinico');
-            if(perdaSemanalMedia > 1.5) {
-                alertaBox.innerHTML = `<span>⚠️</span> Perda muito rápida (${perdaSemanalMedia.toFixed(2)} kg/sem). Foque em ingerir toda a proteína para preservar massa magra.`;
-                alertaBox.classList.remove('hidden');
-            } else {
-                alertaBox.classList.add('hidden');
-            }
-        }
-
-        function renderizarGaleriaDeFotos() {
-            const galeriaContainer = document.getElementById('containerGaleriaFotos');
-            galeriaContainer.innerHTML = '';
-            
-            const registrosComFoto = registros.filter(r => r.fotoUrl).sort((a, b) => new Date(a.dataRaw) - new Date(b.dataRaw));
-            
-            if (registrosComFoto.length === 0) {
-                galeriaContainer.innerHTML = `<p class="text-slate-500 text-[10px] text-center w-full py-4">Nenhuma foto adicionada nas doses ainda.</p>`;
-                return;
-            }
-
-            registrosComFoto.forEach(reg => {
-                const cardFoto = document.createElement('div');
-                cardFoto.className = "min-w-[110px] bg-slate-900 border border-slate-800 p-1.5 rounded-xl text-center flex-shrink-0 snap-center space-y-1";
-                cardFoto.innerHTML = `
-                    <div class="w-[98px] h-[130px] rounded-lg overflow-hidden bg-slate-950 border border-slate-800">
-                        <img src="${reg.fotoUrl}" class="w-full h-full object-cover">
+                <!-- Ampola visual -->
+                <div class="relative w-8 flex flex-col items-center">
+                    <!-- Tampa -->
+                    <div class="w-3 h-1.5 bg-slate-600 rounded-t-sm mb-0.5"></div>
+                    <!-- Corpo -->
+                    <div class="w-7 h-12 border-2 ${isCritical ? 'border-rose-600/60' : vialAtualIdx === i ? 'border-indigo-500/50' : 'border-slate-600/60'} rounded-lg relative overflow-hidden bg-slate-900 shadow-inner flex flex-col justify-end">
+                        <div class="w-full vial-fill bg-gradient-to-t ${corGrad}" style="height:${pct}%"></div>
+                        <span class="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white drop-shadow-md">${isEmpty ? '✗' : pct+'%'}</span>
                     </div>
-                    <p class="text-[10px] font-black text-white mt-1">${reg.peso} kg</p>
-                    <p class="text-[8px] text-slate-500 font-mono">${reg.dataFormatada}</p>
-                `;
-                galeriaContainer.appendChild(cardFoto);
-            });
-        }
+                    <!-- Base -->
+                    <div class="w-8 h-1 bg-slate-700 rounded-b-sm mt-0.5"></div>
+                </div>
 
-        let listaProjecaoPontos = [];
-        function calcularLogicaPrincipal() {
-            const calContainer = document.getElementById('calendarioContainer');
-            const boxStatus = document.getElementById('boxStatusMeta');
-            const ampolasVisuaisContainer = document.getElementById('containerAmpolasVisuais');
-            
-            calContainer.innerHTML = ''; 
-            listaProjecaoPontos = [];
-            ampolasVisuaisContainer.innerHTML = '';
+                <span class="text-[9px] font-mono font-bold ${isCritical ? 'text-rose-300' : vialAtualIdx === i ? 'text-indigo-300' : 'text-slate-400'}">
+                    ${v.mgRestante.toFixed(1)}mg
+                </span>
+                <span class="text-[8px] ${isEmpty ? 'text-slate-600' : isCritical ? 'text-rose-400' : 'text-slate-500'}">
+                    ${isEmpty ? 'vazio' : dosesNeste === 0 ? '<1 dose' : dosesNeste + ' dose' + (dosesNeste > 1 ? 's' : '')}
+                </span>
+            `;
+            container.appendChild(div);
+        });
 
-            let dataBase = new Date();
-            let pesoAtualEvolutivo = configApp.pesoInicial || 80;
-            const cronologico = [...registros].sort((a, b) => new Date(a.dataRaw) - new Date(b.dataRaw));
-            
-            if (cronologico.length > 0) {
-                dataBase = new Date(cronologico[cronologico.length - 1].dataRaw + 'T00:00:00');
-                pesoAtualEvolutivo = cronologico[cronologico.length - 1].peso;
-            }
+        return { vials, vialAtualIdx };
+    }
 
-            let mediaPerdaSemanal = 1.0; 
-            if (cronologico.length >= 2 && configApp.pesoInicial) {
-                const totalSemanasDecorridas = (new Date(cronologico[cronologico.length-1].dataRaw) - new Date(cronologico[0].dataRaw)) / (1000*60*60*24*7);
-                const deltaPesoTotal = configApp.pesoInicial - pesoAtualEvolutivo;
-                mediaPerdaSemanal = totalSemanasDecorridas > 0 ? Math.max(0.1, deltaPesoTotal / totalSemanasDecorridas) : 1.0;
-            } else if (cronologico.length === 1 && configApp.pesoInicial) {
-                mediaPerdaSemanal = Math.max(0.1, configApp.pesoInicial - pesoAtualEvolutivo);
-            }
+    function renderizarProjecaoVials(vials, vialAtualIdx) {
+        const container = document.getElementById('containerProjecaoVials');
+        container.innerHTML = '';
 
-            const totalQuilosEliminados = configApp.pesoInicial ? (configApp.pesoInicial - pesoAtualEvolutivo).toFixed(1) : "0.0";
-            document.getElementById('lblTotalEliminado').innerText = `-${totalQuilosEliminados} kg`;
-            document.getElementById('lblMediaSemanal').innerText = `${mediaPerdaSemanal.toFixed(2)} kg/sem`;
+        const doseAlvo = configApp.doseAlvo;
+        const vialsComDose = vials.filter(v => v.mgRestante > 0);
+        if (vialsComDose.length === 0) return;
 
-            // CONSUMO REAL FRACIONADO POR MILIGRAMA
-            const totalAmpolasPermitidas = configApp.ampolas || 1;
-            let arrayFrascosMg = Array(totalAmpolasPermitidas).fill(15.0);
-            let totalMgGastoAcumuladoNoTratamento = 0;
+        const titulo = document.createElement('div');
+        titulo.className = 'text-[10px] text-slate-500 font-bold uppercase tracking-wider';
+        titulo.innerText = 'Projeção de uso por vial';
+        container.appendChild(titulo);
 
-            cronologico.forEach(reg => {
-                let dosePorAbater = parseFloat(reg.dose) || 2.5; 
-                totalMgGastoAcumuladoNoTratamento += dosePorAbater;
-                
-                for (let j = 0; j < arrayFrascosMg.length; j++) {
-                    if (arrayFrascosMg[j] > 0) {
-                        if (arrayFrascosMg[j] >= dosePorAbater) {
-                            arrayFrascosMg[j] -= dosePorAbater;
-                            dosePorAbater = 0;
-                            break;
-                        } else {
-                            dosePorAbater -= arrayFrascosMg[j];
-                            arrayFrascosMg[j] = 0;
-                        }
-                    }
-                }
-            });
+        vialsComDose.forEach(v => {
+            const doses     = Math.floor(v.mgRestante / doseAlvo);
+            const pct       = Math.round((v.mgRestante / v.mgInicial) * 100);
+            const isCurrent = v.idx === vialAtualIdx;
+            const isCrit    = pct < 20;
 
-            // PROCESSAMENTO FINANCEIRO
-            if (configApp.precoAmpola && configApp.precoAmpola > 0) {
-                const precoPorMg = configApp.precoAmpola / 15.0;
-                const totalInvestidoFinanceiro = totalMgGastoAcumuladoNoTratamento * precoPorMg;
-                
-                document.getElementById('financeiroGastoTotal').innerText = `R$ ${totalInvestidoFinanceiro.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                
-                const quilosPerdidosNum = parseFloat(totalQuilosEliminados);
-                if (quilosPerdidosNum > 0) {
-                    const precoPorKgPerdido = totalInvestidoFinanceiro / quilosPerdidosNum;
-                    document.getElementById('financeiroPrecoPorKg').innerText = `R$ ${precoPorKgPerdido.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                } else {
-                    document.getElementById('financeiroPrecoPorKg').innerText = "R$ 0,00";
-                }
-            } else {
-                document.getElementById('financeiroGastoTotal').innerText = "R$ --";
-                document.getElementById('financeiroPrecoPorKg').innerText = "R$ --";
-            }
-
-            let frascoAtualIndexParaTexto = -1;
-            for (let i = 0; i < totalAmpolasPermitidas; i++) {
-                let mgRestantes = arrayFrascosMg[i];
-                let percentualLiquido = Math.round((mgRestantes / 15.0) * 100);
-                
-                if (mgRestantes > 0 && frascoAtualIndexParaTexto === -1) {
-                    frascoAtualIndexParaTexto = i;
-                }
-
-                const divAmpola = document.createElement('div');
-                divAmpola.className = "flex flex-col items-center space-y-1 bg-slate-950/60 p-2 rounded-xl border border-slate-800 text-center w-[68px]";
-                divAmpola.innerHTML = `
-                    <span class="text-[8px] font-bold text-slate-500 uppercase">Vial ${i + 1}</span>
-                    <div class="w-7 h-11 border-2 border-slate-600 rounded-lg relative overflow-hidden bg-slate-900 shadow-inner flex flex-col justify-end">
-                        <div class="w-full transition-all duration-500 bg-gradient-to-t ${percentualLiquido > 30 ? 'from-emerald-600 to-teal-400' : 'from-amber-600 to-yellow-400'}" style="height: ${percentualLiquido}%;"></div>
-                        <span class="absolute inset-0 flex items-center justify-center text-[8px] font-black text-white dropshadow-sm">${percentualLiquido}%</span>
+            const row = document.createElement('div');
+            row.className = `flex items-center gap-2 ${isCurrent ? 'bg-indigo-950/30 border border-indigo-500/20' : 'bg-slate-900/40 border border-slate-800'} rounded-xl px-3 py-2`;
+            row.innerHTML = `
+                <span class="text-[9px] font-bold ${isCurrent ? 'text-indigo-300' : 'text-slate-500'} w-12 flex-shrink-0">
+                    Vial ${v.idx+1}${isCurrent ? ' ★' : ''}
+                </span>
+                <div class="flex-1">
+                    <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all ${isCrit ? 'bg-rose-500' : isCurrent ? 'bg-indigo-500' : 'bg-slate-600'}"
+                            style="width:${pct}%"></div>
                     </div>
-                    <span class="text-[9px] font-mono text-slate-400 font-bold">${mgRestantes.toFixed(1)} mg</span>
-                `;
-                ampolasVisuaisContainer.appendChild(divAmpola);
-            }
+                </div>
+                <span class="text-[9px] font-bold ${isCrit ? 'text-rose-300' : isCurrent ? 'text-indigo-300' : 'text-slate-400'} w-16 text-right flex-shrink-0">
+                    ${doses} × ${formatarDose(doseAlvo)}
+                </span>
+                <span class="text-[9px] text-slate-600 w-12 text-right flex-shrink-0">
+                    ${v.mgRestante.toFixed(1)}mg
+                </span>
+            `;
+            container.appendChild(row);
+        });
+    }
 
-            let totalMgDisponivelNoEstoqueRestante = arrayFrascosMg.reduce((a, b) => a + b, 0);
-            const totalDosesFuturasEstoque = Math.floor(totalMgDisponivelNoEstoqueRestante / configApp.doseAlvo);
-            
-            document.getElementById('resTotalDoses').innerText = `${cronologico.length + totalDosesFuturasEstoque} sem`;
+    /* ════════════════════════════
+       LÓGICA PRINCIPAL
+    ═══════════════════════════ */
+    let listaProjecaoPontos = [];
 
-            if (frascoAtualIndexParaTexto !== -1) {
-                let mgDoFrascoEmUso = arrayFrascosMg[frascoAtualIndexParaTexto];
-                let dosesRestantesNoFrascoEmUso = Math.floor(mgDoFrascoEmUso / configApp.doseAlvo);
-                
-                document.getElementById('lblRendimentoAmpola').innerText = `${dosesRestantesNoFrascoEmUso} doses de ${configApp.doseAlvo}mg restam no Vial ${frascoAtualIndexParaTexto + 1}`;
-                
-                let pctBarraIndividual = Math.round((mgDoFrascoEmUso / 15.0) * 100);
-                document.getElementById('barraAmpola').style.width = `${pctBarraIndividual}%`;
+    function calcularLogicaPrincipal() {
+        const calContainer = document.getElementById('calendarioContainer');
+        const boxStatus    = document.getElementById('boxStatusMeta');
+        calContainer.innerHTML = '';
+        listaProjecaoPontos    = [];
+
+        let dataBase           = new Date();
+        let pesoAtualEvolutivo = configApp.pesoInicial || 80;
+        const cronologico = [...registros].sort((a,b) => new Date(a.dataRaw) - new Date(b.dataRaw));
+
+        if (cronologico.length > 0) {
+            dataBase           = new Date(cronologico[cronologico.length-1].dataRaw + 'T12:00:00');
+            pesoAtualEvolutivo = cronologico[cronologico.length-1].peso;
+        }
+
+        /* ── Média de perda semanal ── */
+        let mediaPerdaSemanal = 1.0;
+        if (cronologico.length >= 2 && configApp.pesoInicial) {
+            const semanas = (new Date(cronologico[cronologico.length-1].dataRaw) - new Date(cronologico[0].dataRaw)) / (1000*60*60*24*7);
+            const delta   = configApp.pesoInicial - pesoAtualEvolutivo;
+            mediaPerdaSemanal = semanas > 0 ? Math.max(0.1, delta/semanas) : 1.0;
+        } else if (cronologico.length === 1 && configApp.pesoInicial) {
+            mediaPerdaSemanal = Math.max(0.1, configApp.pesoInicial - pesoAtualEvolutivo);
+        }
+
+        document.getElementById('lblTotalEliminado').innerText = `-${(configApp.pesoInicial ? (configApp.pesoInicial - pesoAtualEvolutivo) : 0).toFixed(1)} kg`;
+        document.getElementById('lblMediaSemanal').innerText   = `${mediaPerdaSemanal.toFixed(2)} kg/sem`;
+
+        /* ════ ESTOQUE ════ */
+        const vials = calcularEstoqueAmpolas(cronologico);
+        const { vialAtualIdx } = renderizarEstoqueVisual(vials);
+        renderizarProjecaoVials(vials, vialAtualIdx);
+
+        const mgTotalRestante     = vials.reduce((a,v) => a + v.mgRestante, 0);
+        const totalDosesFuturas   = Math.floor(mgTotalRestante / configApp.doseAlvo);
+
+        /* Vial em uso */
+        if (vialAtualIdx !== -1) {
+            const vu   = vials[vialAtualIdx];
+            const pct  = Math.round((vu.mgRestante / vu.mgInicial) * 100);
+            const doses = Math.floor(vu.mgRestante / configApp.doseAlvo);
+            document.getElementById('lblVialEmUso').innerText         = `Vial ${vialAtualIdx + 1} — ${pct}%`;
+            document.getElementById('lblRendimentoAmpola').innerText  = `${doses} dose${doses !== 1 ? 's' : ''} de ${formatarDose(configApp.doseAlvo)} restam`;
+            document.getElementById('lblMgRestantesVial').innerText   = `${vu.mgRestante.toFixed(1)} mg restantes`;
+
+            const barra = document.getElementById('barraAmpola');
+            barra.style.width = `${pct}%`;
+            barra.className   = `h-full w-0 transition-all duration-500 rounded-full ${
+                pct < 20 ? 'bg-rose-500' : pct <= 50 ? 'bg-amber-500' : 'bg-indigo-500'
+            }`;
+        } else {
+            document.getElementById('lblVialEmUso').innerText        = 'Sem vial em uso';
+            document.getElementById('lblRendimentoAmpola').innerText = '0 doses restam';
+            document.getElementById('lblMgRestantesVial').innerText  = '0 mg';
+            document.getElementById('barraAmpola').style.width       = '0%';
+        }
+
+        /* Resumo do estoque */
+        document.getElementById('lblEstoqueResumo').innerText = `${totalDosesFuturas} dose${totalDosesFuturas !== 1 ? 's' : ''} restante${totalDosesFuturas !== 1 ? 's' : ''} • ${mgTotalRestante.toFixed(1)} mg`;
+
+        /* ════ ALERTA CRÍTICO ════ */
+        const alertaCrit = document.getElementById('alertaEstoqueCritico');
+        const txtAlerta  = document.getElementById('txtAlertaEstoque');
+        if (totalDosesFuturas === 0) {
+            txtAlerta.innerText = 'Estoque esgotado! Nenhuma dose disponível.';
+            alertaCrit.classList.remove('hidden');
+            alertaCrit.classList.add('flex');
+        } else if (totalDosesFuturas <= 2) {
+            txtAlerta.innerText = `Estoque crítico! Apenas ${totalDosesFuturas} dose${totalDosesFuturas > 1 ? 's' : ''} restante${totalDosesFuturas > 1 ? 's' : ''}. Providencie reposição.`;
+            alertaCrit.classList.remove('hidden');
+            alertaCrit.classList.add('flex');
+            alertaCrit.classList.add('badge-shake');
+        } else {
+            alertaCrit.classList.add('hidden');
+            alertaCrit.classList.remove('flex');
+        }
+
+        document.getElementById('resTotalDoses').innerText    = `${cronologico.length + totalDosesFuturas} sem`;
+        document.getElementById('resDoseConfigurada').innerText = formatarDose(configApp.doseAlvo);
+
+        /* ── Cálculos metabólicos ── */
+        calcularMetabolismo(pesoAtualEvolutivo, mediaPerdaSemanal);
+
+        /* ── Rodízio ── */
+        let idxUltimoLocal = cronologico.length > 0
+            ? listaMembrosRodizio.findIndex(m => m.nome === cronologico[cronologico.length-1].local)
+            : -1;
+        document.getElementById('txtAvisoRodizio').innerText = `Rodízio • Próximo: ${listaMembrosRodizio[(idxUltimoLocal+1) % listaMembrosRodizio.length].nome}`;
+
+        /* ── Data término do estoque ── */
+        const dataTermino = new Date(dataBase.getTime());
+        dataTermino.setDate(dataTermino.getDate() + totalDosesFuturas * 7);
+        document.getElementById('resDataTermino').innerText =
+            `${String(dataTermino.getDate()).padStart(2,'0')}/${String(dataTermino.getMonth()+1).padStart(2,'0')}`;
+
+        /* ── Badge de dias para próxima dose ── */
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const proxData = new Date(dataBase.getTime());
+        proxData.setDate(proxData.getDate() + 7);
+        const diffDias = Math.ceil((proxData - hoje) / (1000*60*60*24));
+        const badgeEl  = document.getElementById('badgeProximaDose');
+        const lblDias  = document.getElementById('lblDiasRestantes');
+        if (totalDosesFuturas > 0) {
+            badgeEl.classList.remove('hidden');
+            if (diffDias <= 0) {
+                lblDias.innerText   = 'Hoje!';
+                lblDias.className   = 'text-base font-black text-emerald-400';
+            } else if (diffDias === 1) {
+                lblDias.innerText   = 'Amanhã';
+                lblDias.className   = 'text-sm font-black text-amber-400';
             } else {
-                document.getElementById('lblRendimentoAmpola').innerText = "0 doses restam (Estoque zerado)";
-                document.getElementById('barraAmpola').style.width = "0%";
+                lblDias.innerText   = `${diffDias} dias`;
+                lblDias.className   = 'text-base font-black text-indigo-300';
             }
-
-            document.getElementById('resDoseConfigurada').innerText = `${configApp.doseAlvo} mg`;
-
-            calcularPainelNutricional(pesoAtualEvolutivo, mediaPerdaSemanal);
-
-            let idxUltimoLocal = cronologico.length > 0 ? listaMembrosRodizio.findIndex(m => m.nome === cronologico[cronologico.length - 1].local) : -1;
-            document.getElementById('txtAvisoRodizio').innerText = `Próximo: ${listaMembrosRodizio[(idxUltimoLocal + 1) % listaMembrosRodizio.length].nome}`;
-
-            let dataTerminoEstoque = new Date(dataBase.getTime());
-            dataTerminoEstoque.setDate(dataTerminoEstoque.getDate() + (totalDosesFuturasEstoque * 7));
-            document.getElementById('resDataTermino').innerText = `${String(dataTerminoEstoque.getDate()).padStart(2, '0')}/${String(dataTerminoEstoque.getMonth() + 1).padStart(2, '0')}`;
-
-            let pesoSimulado = pesoAtualEvolutivo;
-            let dataSimulada = new Date(dataBase.getTime());
-            let doseAtingeMeta = -1;
-
-            for (let i = 1; i <= totalDosesFuturasEstoque; i++) {
-                dataSimulada.setDate(dataSimulada.getDate() + 7);
-                pesoSimulado -= mediaPerdaSemanal;
-                if (pesoSimulado < 30) pesoSimulado = 30;
-
-                const dataStringISO = dataSimulada.toISOString().split('T')[0];
-                const dataFormatadaBr = `${String(dataSimulada.getDate()).padStart(2, '0')}/${String(dataSimulada.getMonth() + 1).padStart(2, '0')}`;
-                let infoMembroDose = listaMembrosRodizio[(idxUltimoLocal + i) % listaMembrosRodizio.length];
-                
-                const pesoPrevistoTexto = pesoSimulado.toFixed(1);
-                listaProjecaoPontos.push({ label: dataFormatadaBr, peso: parseFloat(pesoPrevistoTexto) });
-
-                const btnCard = document.createElement('button');
-                btnCard.className = i === 1 
-                    ? "min-w-[100px] bg-indigo-600 p-3 rounded-xl text-center flex-shrink-0 text-white text-xs cursor-pointer shadow-lg border border-indigo-400" 
-                    : "min-w-[100px] bg-slate-900 border border-slate-700/60 p-3 rounded-xl text-center flex-shrink-0 text-xs cursor-pointer";
-                
-                btnCard.innerHTML = `
-                    <p class="text-[8px] opacity-70">Semana ${cronologico.length + i}</p>
-                    <p class="text-sm font-black mt-0.5">${dataFormatadaBr}</p>
-                    <p class="text-[10px] text-emerald-400 font-bold mt-1">${pesoPrevistoTexto} kg</p>
-                    <p class="text-[8px] mt-1 bg-black/30 rounded py-0.5">📍 ${infoMembroDose.sigla}</p>
-                `;
-                
-                btnCard.onclick = () => abrirModalRegistroRapido(cronologico.length + i, dataStringISO, infoMembroDose.nome, pesoPrevistoTexto);
-                calContainer.appendChild(btnCard);
-
-                if (configApp.pesoMeta && pesoSimulado <= configApp.pesoMeta && doseAtingeMeta === -1) doseAtingeMeta = cronologico.length + i;
-            }
-
-            if (!configApp.pesoMeta) { boxStatus.innerHTML = `<span>🎯</span> <span class="text-slate-400">Defina uma meta nos Ajustes.</span>`; return; }
-            boxStatus.innerHTML = doseAtingeMeta !== -1 ? `<span>✅</span> Meta prevista na semana ${doseAtingeMeta}.` : `<span>⚠️</span> Estoque acaba em ${pesoSimulado.toFixed(1)}kg antes da meta.`;
         }
 
-        function atualizarProgressoMeta() {
-            const cardMeta = document.getElementById('cardMetaProgresso');
-            if (!configApp.pesoMeta || registros.length === 0 || !configApp.pesoInicial) { cardMeta.classList.add('hidden'); return; }
-            cardMeta.classList.remove('hidden');
+        /* ── Calendário de doses futuras ── */
+        const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+        const meses      = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+        let pesoSimulado = pesoAtualEvolutivo;
+        let dataSimulada = new Date(dataBase.getTime());
+        let doseAtingeMeta = -1;
 
-            const crono = [...registros].sort((a, b) => new Date(a.dataRaw) - new Date(b.dataRaw));
-            const pesoAtual = crono[crono.length - 1].peso;
-            document.getElementById('txtPesoInicialMeta').innerText = `Início: ${configApp.pesoInicial} kg`;
-            document.getElementById('txtPesoAlvoMeta').innerText = `Meta: ${configApp.pesoMeta} kg`;
+        for (let i = 1; i <= totalDosesFuturas; i++) {
+            dataSimulada.setDate(dataSimulada.getDate() + 7);
+            pesoSimulado = Math.max(30, pesoSimulado - mediaPerdaSemanal);
 
-            const totalParaPerder = configApp.pesoInicial - configApp.pesoMeta;
-            const jaPerdido = configApp.pesoInicial - pesoAtual;
-            let porcentagem = Math.max(0, Math.min(Math.round((jaPerdido / totalParaPerder) * 100), 100));
-            
-            document.getElementById('barraMeta').style.width = `${porcentagem}%`;
-            document.getElementById('txtPorcentagemMeta').innerText = `${porcentagem}%`;
-            document.getElementById('txtRestamQuilos').innerText = pesoAtual <= configApp.pesoMeta ? "Meta atingida! 🏆" : `Faltam ${(pesoAtual - configApp.pesoMeta).toFixed(1)} kg`;
-        }
+            const iso     = dataSimulada.toISOString().split('T')[0];
+            const diaSem  = diasSemana[dataSimulada.getDay()];
+            const diaNum  = String(dataSimulada.getDate()).padStart(2,'0');
+            const mesStr  = meses[dataSimulada.getMonth()];
+            const dataBR  = `${diaNum}/${String(dataSimulada.getMonth()+1).padStart(2,'0')}`;
+            const membro  = listaMembrosRodizio[(idxUltimoLocal + i) % listaMembrosRodizio.length];
+            const pesoTxt = pesoSimulado.toFixed(1);
 
-        function atualizarGrafico() {
-            const ctx = document.getElementById('graficoPeso').getContext('2d');
-            const dadosReais = [...registros].sort((a, b) => new Date(a.dataRaw) - new Date(b.dataRaw));
-            let labels = []; let valoresReais = [];
+            listaProjecaoPontos.push({ label: dataBR, peso: parseFloat(pesoTxt) });
 
-            if (configApp.pesoInicial) { labels.push("Início"); valoresReais.push(configApp.pesoInicial); }
-            dadosReais.forEach(r => { labels.push(`${r.dataRaw.split('-')[2]}/${r.dataRaw.split('-')[1]}`); valoresReais.push(r.peso); });
+            const coresLocal = {
+                'Abdômen (Esquerdo)': { bg:'bg-teal-500/10', border:'border-teal-500/30', text:'text-teal-300', dot:'bg-teal-400' },
+                'Abdômen (Direito)':  { bg:'bg-teal-500/10', border:'border-teal-500/30', text:'text-teal-300', dot:'bg-teal-400' },
+                'Coxa Esquerda':      { bg:'bg-violet-500/10', border:'border-violet-500/30', text:'text-violet-300', dot:'bg-violet-400' },
+                'Coxa Direita':       { bg:'bg-violet-500/10', border:'border-violet-500/30', text:'text-violet-300', dot:'bg-violet-400' },
+            };
+            const cor      = coresLocal[membro.nome] || { bg:'bg-slate-700/50', border:'border-slate-600', text:'text-slate-300', dot:'bg-slate-400' };
+            const isProx   = i === 1;
+            const isAtras  = dataSimulada < hoje;
 
-            let valoresProjetados = Array(valoresReais.length).fill(null);
-            if (valoresReais.length > 0 && listaProjecaoPontos.length > 0) {
-                valoresProjetados[valoresReais.length - 1] = valoresReais[valoresReais.length - 1];
-                listaProjecaoPontos.forEach(p => { labels.push(p.label); valoresReais.push(null); valoresProjetados.push(p.peso); });
-            }
-
-            if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { data: valoresReais, borderColor: '#34d399', borderWidth: 3, fill: false, pointRadius: 4 },
-                        { data: valoresProjetados, borderColor: '#6366f1', borderWidth: 2, borderDash: [4, 4], fill: false, pointRadius: 2 },
-                        { data: configApp.pesoMeta ? Array(labels.length).fill(configApp.pesoMeta) : [], borderColor: '#f43f5e', borderWidth: 1, borderDash: [6, 6], fill: false, pointRadius: 0 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-        }
-
-        const listaHtml = document.getElementById('listaRegistros');
-        function renderizarLista() {
-            listaHtml.innerHTML = '';
-            if (registros.length === 0) { listaHtml.innerHTML = '<p class="text-slate-500 text-[10px] text-center">Nenhum registro na nuvem.</p>'; return; }
-            [...registros].sort((a, b) => new Date(b.dataRaw) - new Date(a.dataRaw)).forEach(reg => {
-                const item = document.createElement('div');
-                item.className = "bg-slate-900/60 p-2 rounded-xl flex justify-between items-center text-xs border border-slate-800";
-                item.innerHTML = `
+            const btn = document.createElement('button');
+            btn.className = `snap-start flex-shrink-0 w-[118px] rounded-2xl p-3 text-left cursor-pointer transition-all active:scale-95 ${
+                isProx  ? 'bg-indigo-600 border-2 border-indigo-400 shadow-lg shadow-indigo-900/40'
+                : isAtras ? 'bg-rose-950/40 border border-rose-700/40'
+                :           'bg-slate-900/80 border border-slate-700/50'
+            }`;
+            btn.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
                     <div>
-                        <span class="font-bold text-white">${reg.peso} kg</span> 
-                        <span class="text-[9px] text-emerald-400 font-mono bg-slate-800 px-1 rounded">${reg.dose}</span>
-                        <p class="text-[9px] text-slate-400">📍 ${reg.local} • ${reg.sintoma || 'Sem sintomas'}</p>
+                        <span class="text-[9px] font-bold uppercase ${isProx ? 'text-indigo-200' : 'text-slate-500'}">${diaSem}</span>
+                        <p class="text-lg font-black leading-none ${isProx ? 'text-white' : 'text-slate-200'}">${diaNum}</p>
+                        <span class="text-[10px] font-semibold ${isProx ? 'text-indigo-200' : 'text-slate-400'}">${mesStr}</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] text-slate-500 font-mono">${reg.dataFormatada}</span>
-                        <button onclick="deletarRegistroUnico(${reg.id})" class="p-1 text-rose-400 hover:text-rose-300 font-bold active:scale-90 cursor-pointer">🗑️</button>
+                    <span class="text-[9px] font-bold ${isProx ? 'text-indigo-200 bg-indigo-700/50' : 'text-slate-500 bg-slate-800'} px-1.5 py-0.5 rounded-lg">S${cronologico.length+i}</span>
+                </div>
+                <div class="space-y-1.5">
+                    <span class="text-[10px] font-black ${isProx ? 'text-emerald-300' : 'text-emerald-400'}">↓ ${pesoTxt} kg</span>
+                    <div class="flex items-center gap-1 ${cor.bg} ${cor.border} border rounded-lg px-1.5 py-1">
+                        <span class="w-1.5 h-1.5 rounded-full ${cor.dot} flex-shrink-0"></span>
+                        <span class="text-[9px] font-semibold ${cor.text} leading-tight">${membro.sigla}</span>
                     </div>
-                `;
-                listaHtml.appendChild(item);
-            });
+                    <span class="text-[9px] ${isProx ? 'text-indigo-200' : 'text-slate-500'}">${formatarDose(configApp.doseAlvo)}</span>
+                </div>
+                ${isProx ? '<div class="mt-2 text-center text-[9px] font-bold text-indigo-200 bg-indigo-700/30 rounded-lg py-0.5">Toque p/ registrar</div>' : ''}
+            `;
+            btn.onclick = () => abrirModalRegistroRapido(cronologico.length+i, iso, membro.nome, pesoTxt);
+            calContainer.appendChild(btn);
+
+            if (configApp.pesoMeta && pesoSimulado <= configApp.pesoMeta && doseAtingeMeta === -1)
+                doseAtingeMeta = cronologico.length + i;
         }
 
-        function atualizarTudo() { renderizarLista(); calcularLogicaPrincipal(); atualizarProgressoMeta(); atualizarGrafico(); processarPainelAgua(); renderizarGaleriaDeFotos(); }
-        window.limparTudo = async function() { if (confirm('Apagar todo o histórico da nuvem?')) { registros = []; configApp = { pesoInicial: null, pesoMeta: null, ampolas: 1, doseAlvo: 2.5, altura: null, idade: null, precoAmpola: null, aguaLog: {} }; await salvarDadosNuvem(); toggleConfigModal(); atualizarTudo(); } };
-    </script>
+        if (!configApp.pesoMeta) {
+            boxStatus.innerHTML = `<span>🎯</span> <span class="text-slate-400">Defina uma meta nos Ajustes.</span>`;
+            return;
+        }
+        boxStatus.innerHTML = doseAtingeMeta !== -1
+            ? `<span>✅</span> Meta prevista na semana ${doseAtingeMeta}.`
+            : `<span>⚠️</span> Estoque acaba em ${pesoSimulado.toFixed(1)} kg antes da meta.`;
+    }
+
+    /* ════════════════════════════
+       PROGRESSO DE META
+    ═══════════════════════════ */
+    function atualizarProgressoMeta() {
+        const card = document.getElementById('cardMetaProgresso');
+        if (!configApp.pesoMeta || registros.length === 0 || !configApp.pesoInicial) { card.classList.add('hidden'); return; }
+        card.classList.remove('hidden');
+
+        const crono     = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
+        const pesoAtual = crono[crono.length-1].peso;
+        const totalPerder = configApp.pesoInicial - configApp.pesoMeta;
+        const jaPerdido   = Math.max(0, configApp.pesoInicial - pesoAtual);
+        const faltaPerder = Math.max(0, pesoAtual - configApp.pesoMeta);
+        const pct = Math.max(0, Math.min(Math.round((jaPerdido / totalPerder) * 100), 100));
+        const metaAtingida = pesoAtual <= configApp.pesoMeta;
+
+        document.getElementById('txtPesoInicialMeta').innerText  = `${configApp.pesoInicial} kg`;
+        document.getElementById('txtPesoAlvoMeta').innerText     = `${configApp.pesoMeta} kg`;
+        document.getElementById('txtPorcentagemMeta').innerText  = `${pct}%`;
+        document.getElementById('txtRestamQuilos').innerText     = metaAtingida ? 'Meta atingida! 🏆' : `Faltam ${faltaPerder.toFixed(1)} kg`;
+        document.getElementById('lblKgPerdidoMeta').innerText    = `-${jaPerdido.toFixed(1)} kg`;
+        document.getElementById('lblKgFaltaMeta').innerText      = metaAtingida ? '0 kg ✅' : `${faltaPerder.toFixed(1)} kg`;
+
+        const badge = document.getElementById('badgeMetaStatus');
+        if      (metaAtingida)   { badge.innerText = '🏆 Concluído';   badge.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-emerald-500/15 border-emerald-500/30 text-emerald-300'; }
+        else if (pct >= 75)      { badge.innerText = '🔥 Quase lá!';  badge.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-amber-500/15 border-amber-500/30 text-amber-300'; }
+        else if (pct >= 50)      { badge.innerText = '💪 Na metade';  badge.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-indigo-500/15 border-indigo-500/30 text-indigo-300'; }
+        else                     { badge.innerText = '🚀 Em progresso'; badge.className = 'px-2.5 py-1 rounded-xl text-[10px] font-bold border bg-slate-700/50 border-slate-600 text-slate-300'; }
+
+        document.getElementById('barraMeta').style.width = `${pct}%`;
+        document.getElementById('anelMeta').style.strokeDashoffset = 201 - (pct/100)*201;
+
+        const boxEst = document.getElementById('boxEstimativaMeta');
+        const txtEst = document.getElementById('txtEstimativaMeta');
+        if (!metaAtingida && crono.length >= 2) {
+            const semanas = (new Date(crono[crono.length-1].dataRaw) - new Date(crono[0].dataRaw)) / (1000*60*60*24*7);
+            const media   = semanas > 0 ? jaPerdido / semanas : 1;
+            if (media > 0) {
+                const semsRest = Math.ceil(faltaPerder / media);
+                const dataEst  = new Date();
+                dataEst.setDate(dataEst.getDate() + semsRest*7);
+                const m = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+                txtEst.innerText = `Estimativa: ${dataEst.getDate()} de ${m[dataEst.getMonth()]} de ${dataEst.getFullYear()} (${semsRest} sem)`;
+                boxEst.classList.remove('hidden');
+            }
+        } else { boxEst.classList.add('hidden'); }
+    }
+
+    /* ════════════════════════════
+       GRÁFICO
+    ═══════════════════════════ */
+    function atualizarGrafico() {
+        const ctx = document.getElementById('graficoPeso').getContext('2d');
+        const real = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
+        let labels = [], valReais = [];
+
+        if (configApp.pesoInicial) { labels.push("Início"); valReais.push(configApp.pesoInicial); }
+        real.forEach(r => { labels.push(`${r.dataRaw.split('-')[2]}/${r.dataRaw.split('-')[1]}`); valReais.push(r.peso); });
+
+        let valProj = Array(valReais.length).fill(null);
+        if (valReais.length > 0 && listaProjecaoPontos.length > 0) {
+            valProj[valReais.length-1] = valReais[valReais.length-1];
+            listaProjecaoPontos.forEach(p => { labels.push(p.label); valReais.push(null); valProj.push(p.peso); });
+        }
+
+        const gR = ctx.createLinearGradient(0,0,0,220);
+        gR.addColorStop(0,'rgba(52,211,153,.25)'); gR.addColorStop(1,'rgba(52,211,153,.01)');
+        const gP = ctx.createLinearGradient(0,0,0,220);
+        gP.addColorStop(0,'rgba(99,102,241,.15)'); gP.addColorStop(1,'rgba(99,102,241,.01)');
+
+        const todos = [...valReais,...valProj].filter(v=>v!==null);
+        if (configApp.pesoMeta) todos.push(configApp.pesoMeta);
+        const minP = todos.length ? Math.floor(Math.min(...todos))-2 : 50;
+        const maxP = todos.length ? Math.ceil(Math.max(...todos))+2  : 100;
+
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type:'line',
+            data:{
+                labels,
+                datasets:[
+                    { label:'Peso Real', data:valReais, borderColor:'#34d399', borderWidth:2.5, backgroundColor:gR, fill:true, pointRadius:5, pointHoverRadius:7, pointBackgroundColor:'#34d399', pointBorderColor:'#0f172a', pointBorderWidth:2, tension:0.35, spanGaps:false },
+                    { label:'Projeção', data:valProj, borderColor:'#818cf8', borderWidth:2, borderDash:[5,4], backgroundColor:gP, fill:true, pointRadius:3, pointHoverRadius:5, pointBackgroundColor:'#818cf8', pointBorderColor:'#0f172a', pointBorderWidth:1.5, tension:0.35, spanGaps:false },
+                    { label:'Meta', data: configApp.pesoMeta ? Array(labels.length).fill(configApp.pesoMeta) : [], borderColor:'#fb7185', borderWidth:1.5, borderDash:[6,5], backgroundColor:'transparent', fill:false, pointRadius:0, tension:0 }
+                ]
+            },
+            options:{
+                responsive:true, maintainAspectRatio:false,
+                interaction:{ mode:'index', intersect:false },
+                plugins:{
+                    legend:{ display:false },
+                    tooltip:{ backgroundColor:'#1e293b', borderColor:'#334155', borderWidth:1, titleColor:'#94a3b8', bodyColor:'#f1f5f9', padding:10,
+                        callbacks:{ label: ctx => ctx.parsed.y===null ? null : ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} kg` }
+                    }
+                },
+                scales:{
+                    x:{ grid:{ color:'rgba(51,65,85,.5)', drawTicks:false }, ticks:{ color:'#64748b', font:{size:10}, maxRotation:45, autoSkip:true, maxTicksLimit:8 }, border:{ color:'rgba(51,65,85,.4)' } },
+                    y:{ min:minP, max:maxP, grid:{ color:'rgba(51,65,85,.4)', drawTicks:false }, ticks:{ color:'#64748b', font:{size:10}, callback: v=>`${v} kg`, maxTicksLimit:6 }, border:{ color:'rgba(51,65,85,.4)' } }
+                }
+            }
+        });
+    }
+
+    /* ════════════════════════════
+       LISTA DE REGISTROS
+    ═══════════════════════════ */
+    function renderizarLista() {
+        const listaHtml = document.getElementById('listaRegistros');
+        listaHtml.innerHTML = '';
+
+        const sintomaConfig = {
+            'Sem Sintomas':    { cor:'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', icone:'✅' },
+            'Náusea Leve':     { cor:'text-amber-400 bg-amber-500/10 border-amber-500/20',       icone:'🤢' },
+            'Muita Saciedade': { cor:'text-blue-400 bg-blue-500/10 border-blue-500/20',          icone:'😶' },
+            'Constipação':     { cor:'text-orange-400 bg-orange-500/10 border-orange-500/20',    icone:'😣' },
+            'Fadiga':          { cor:'text-violet-400 bg-violet-500/10 border-violet-500/20',    icone:'😴' },
+        };
+        const localConfig = {
+            'Abdômen (Esquerdo)': { cor:'text-teal-300', dot:'bg-teal-400' },
+            'Abdômen (Direito)':  { cor:'text-teal-300', dot:'bg-teal-400' },
+            'Coxa Esquerda':      { cor:'text-violet-300', dot:'bg-violet-400' },
+            'Coxa Direita':       { cor:'text-violet-300', dot:'bg-violet-400' },
+        };
+
+        const ordenado = [...registros].sort((a,b) => new Date(b.dataRaw)-new Date(a.dataRaw));
+        document.getElementById('lblTotalRegistros').innerText = `${ordenado.length} aplicação${ordenado.length!==1?'ões':''} registrada${ordenado.length!==1?'s':''}`;
+        if (ordenado.length > 0) {
+            document.getElementById('badgeUltimaDose').classList.remove('hidden');
+            document.getElementById('lblDataUltimaDose').innerText = ordenado[0].dataFormatada;
+        }
+
+        if (ordenado.length === 0) {
+            listaHtml.innerHTML = `<div class="flex flex-col items-center justify-center py-6 text-center gap-2"><span class="text-3xl opacity-30">💉</span><p class="text-slate-500 text-xs">Nenhuma dose registrada ainda.</p></div>`;
+            return;
+        }
+
+        ordenado.forEach((reg, idx) => {
+            const sint   = sintomaConfig[reg.sintoma] || sintomaConfig['Sem Sintomas'];
+            const loc    = localConfig[reg.local]     || { cor:'text-slate-300', dot:'bg-slate-400' };
+            const isPrim = idx === 0;
+
+            let varHtml = '';
+            if (idx < ordenado.length-1) {
+                const diff = reg.peso - ordenado[idx+1].peso;
+                varHtml = diff < 0 ? `<span class="text-[9px] font-bold text-emerald-400">▼ ${Math.abs(diff).toFixed(1)} kg</span>`
+                        : diff > 0 ? `<span class="text-[9px] font-bold text-rose-400">▲ ${diff.toFixed(1)} kg</span>`
+                        :            `<span class="text-[9px] text-slate-500">= sem variação</span>`;
+            }
+
+            const item = document.createElement('div');
+            item.className = `rounded-xl border p-3 ${isPrim ? 'bg-slate-900/80 border-indigo-500/20' : 'bg-slate-900/40 border-slate-800'}`;
+            item.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-2.5">
+                        <div class="text-center bg-slate-800 rounded-lg px-2 py-1.5 border border-slate-700 min-w-[38px]">
+                            <span class="text-sm font-black text-white leading-none block">${reg.dataFormatada.split('/')[0]}</span>
+                            <span class="text-[9px] text-slate-400 font-semibold">/${reg.dataFormatada.split('/')[1]||''}</span>
+                        </div>
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-black text-white">${reg.peso} kg</span>${varHtml}
+                                ${isPrim ? '<span class="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded-md font-bold">Última</span>' : ''}
+                            </div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[9px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">${formatarDose(reg.dose)}</span>
+                                <span class="flex items-center gap-1 text-[9px] ${loc.cor}"><span class="w-1.5 h-1.5 rounded-full ${loc.dot}"></span>${reg.local}</span>
+                            </div>
+                            <span class="inline-flex items-center gap-1 text-[9px] border rounded-md px-1.5 py-0.5 ${sint.cor}">${sint.icone} ${reg.sintoma||'Sem Sintomas'}</span>
+                        </div>
+                    </div>
+                    <button onclick="deletarRegistroUnico(${reg.id})" class="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 active:scale-90 transition-all cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    </button>
+                </div>
+            `;
+            listaHtml.appendChild(item);
+        });
+    }
+
+    /* ════════════════════════════
+       RESET
+    ═══════════════════════════ */
+    window.limparTudo = async function() {
+        if (confirm('Apagar todo o histórico da nuvem?')) {
+            registros = [];
+            configApp = { pesoInicial:null, pesoMeta:null, ampolas:1, doseAlvo:2.5, altura:null, idade:null, sexo:'M', atividade:1.2, aguaLog:{} };
+            await setDoc(doc(db,"usuarios",usuarioAtual.uid), { registros, configApp });
+            toggleConfigModal();
+            atualizarTudo();
+        }
+    };
+
+    /* ════════════════════════════
+       ORQUESTRADOR
+    ═══════════════════════════ */
+    function atualizarTudo() {
+        renderizarLista();
+        calcularLogicaPrincipal();
+        atualizarProgressoMeta();
+        atualizarGrafico();
+        processarPainelAgua();
+    }
+</script>
 </body>
 </html>
