@@ -66,10 +66,10 @@
             <p class="text-xs text-slate-400 mt-1">Acesso Restrito • Faça login para continuar</p>
         </div>
         <div class="space-y-3">
-            <input type="email" id="loginEmail" placeholder="E-mail autorizado"
+            <input type="email" id="loginEmail" placeholder="E-mail autorizado" autocomplete="email" aria-label="E-mail autorizado"
                 class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-400">
             <div class="relative">
-                <input type="password" id="loginSenha" placeholder="Sua senha"
+                <input type="password" id="loginSenha" placeholder="Sua senha" autocomplete="current-password" aria-label="Sua senha"
                     class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 pr-10 text-sm text-white outline-none focus:border-emerald-400">
                 <button type="button" onclick="toggleSenhaVisivel()"
                     class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs cursor-pointer" id="btnVerSenha">👁</button>
@@ -91,7 +91,7 @@
     <div class="bg-slate-850 border border-slate-700 p-6 rounded-3xl max-w-md w-full space-y-5 shadow-2xl relative">
         <div class="flex justify-between items-center border-b border-slate-800 pb-3">
             <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Passo a Passo de Configuração</span>
-            <span id="tutorialPassoIndice" class="text-xs text-slate-500 font-mono">Passo 1 de 4</span>
+            <span id="tutorialPassoIndice" class="text-xs text-slate-500 font-mono">Passo 1 de 8</span>
         </div>
 
         <!-- Conteúdo dos Passos -->
@@ -133,6 +133,30 @@
                 <h3 class="text-base font-bold text-white text-center">Cálculo de Perda Inteligente</h3>
                 <p class="text-xs text-slate-300 text-center leading-relaxed">Com os dados preenchidos, o app passa a analisar seu progresso. Se você perder 1kg no primeiro mês e 500g no segundo, o algoritmo ajustará dinamicamente as previsões de data-alvo, refletindo seu ritmo metabólico atual.</p>
             </div>
+            <!-- Passo 5 -->
+            <div id="passo5" class="space-y-3 hidden">
+                <div class="text-3xl text-center">💉</div>
+                <h3 class="text-base font-bold text-white text-center">Estoque de Ampolas (Vials)</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">O card "Estoque de Ampolas" mostra visualmente cada vial de 15mg como um frasco que esvazia conforme você aplica. A cor muda de verde → amarelo → vermelho, e o app avisa quando faltam poucas doses ou o estoque acaba antes da sua meta.</p>
+            </div>
+            <!-- Passo 6 -->
+            <div id="passo6" class="space-y-3 hidden">
+                <div class="text-3xl text-center">🏅</div>
+                <h3 class="text-base font-bold text-white text-center">Métricas, Nota e Alertas</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">O card de "Métricas e Metabolismo" calcula seu gasto calórico (TMB/TDEE) e meta de proteína/fibra/água. A "Nota de Desempenho" compara seu ritmo de perda com o estudo clínico SURMOUNT-1. Fique atento às caixas de alerta amarelas — elas trazem recomendações de segurança (ex: perda rápida demais, hidratação).</p>
+            </div>
+            <!-- Passo 7 -->
+            <div id="passo7" class="space-y-3 hidden">
+                <div class="text-3xl text-center">📅</div>
+                <h3 class="text-base font-bold text-white text-center">Calendário e Sintomas</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">Toque em uma data no calendário de "Próximas Aplicações" para registrar sua dose real. Nesse momento você também pode anotar sintomas (náusea, constipação, etc.) — isso ajuda a identificar padrões e é útil para mostrar ao seu médico.</p>
+            </div>
+            <!-- Passo 8 -->
+            <div id="passo8" class="space-y-3 hidden">
+                <div class="text-3xl text-center">📤</div>
+                <h3 class="text-base font-bold text-white text-center">Progresso e Exportação</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">O card "Progresso Geral" mostra o % concluído até a meta. Em Ajustes você pode exportar todo o seu histórico em CSV para levar à consulta médica. Você pode reabrir este tutorial a qualquer momento pelo botão "Ver tutorial" dentro de Ajustes.</p>
+            </div>
         </div>
 
         <!-- Navegação do Tutorial -->
@@ -163,6 +187,14 @@
     <main class="max-w-md mx-auto space-y-4">
 
         <!-- ══════════════════════════════
+             AVISO MÉDICO
+        ══════════════════════════════ -->
+        <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2.5 text-[10px] text-amber-300 leading-relaxed flex items-start gap-2">
+            <span class="text-sm flex-shrink-0">⚠️</span>
+            <span>Este app é uma ferramenta pessoal de acompanhamento e <strong>não substitui orientação médica</strong>. Doses, titulação e ajustes de tratamento devem ser sempre definidos com seu médico.</span>
+        </div>
+
+        <!-- ══════════════════════════════
              MODAL DE AJUSTES
         ══════════════════════════════ -->
         <section id="modalConfig"
@@ -173,34 +205,34 @@
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-1">Peso Inicial Histórico (kg)</label>
+                    <label for="configPesoInicial" class="block text-[11px] text-slate-400 mb-1">Peso Inicial Histórico (kg)</label>
                     <input type="number" step="0.1" id="configPesoInicial" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-1">Meta Alvo Final (kg)</label>
+                    <label for="configPesoMeta" class="block text-[11px] text-slate-400 mb-1">Meta Alvo Final (kg)</label>
                     <input type="number" step="0.1" id="configPesoMeta" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-1">Altura (cm)</label>
+                    <label for="configAltura" class="block text-[11px] text-slate-400 mb-1">Altura (cm)</label>
                     <input type="number" id="configAltura" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-1">Idade (anos)</label>
+                    <label for="configIdade" class="block text-[11px] text-slate-400 mb-1">Idade (anos)</label>
                     <input type="number" id="configIdade" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-1">Sexo Biológico</label>
+                    <label for="configSexo" class="block text-[11px] text-slate-400 mb-1">Sexo Biológico</label>
                     <select id="configSexo" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                         <option value="M">Masculino</option>
                         <option value="F">Feminino</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-1">Nível de Atividade</label>
+                    <label for="configAtividade" class="block text-[11px] text-slate-400 mb-1">Nível de Atividade</label>
                     <select id="configAtividade" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                         <option value="1.2">Sedentário</option>
                         <option value="1.375">Levemente ativo</option>
@@ -212,16 +244,18 @@
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-1">Qtd Ampolas 15mg Totais</label>
-                    <input type="number" id="configAmpolas" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                    <label for="configAmpolas" class="block text-[11px] text-slate-400 mb-1">Qtd Ampolas 15mg Totais</label>
+                    <input type="number" id="configAmpolas" min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                 </div>
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-1">Dose Alvo Atual (mg)</label>
+                    <label for="configDoseAlvo" class="block text-[11px] text-slate-400 mb-1">Dose Alvo Atual (mg)</label>
                     <select id="configDoseAlvo" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                         <option value="2.5">2.5 mg — 8 UI</option>
                         <option value="5.0">5.0 mg — 16 UI</option>
                         <option value="7.5">7.5 mg — 24 UI</option>
                         <option value="10.0">10.0 mg — 32 UI</option>
+                        <option value="12.5">12.5 mg — 40 UI</option>
+                        <option value="15.0">15.0 mg — 48 UI</option>
                     </select>
                 </div>
             </div>
@@ -231,37 +265,42 @@
             </button>
             <div class="bg-slate-900/60 rounded-xl p-2.5 border border-slate-800">
                 <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-2">💉 Referência Seringa (100 UI/mL)</p>
-                <div class="grid grid-cols-4 gap-1.5 text-center">
+                <div class="grid grid-cols-3 gap-1.5 text-center">
                     <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700"><span class="text-[9px] font-black text-white block">2.5 mg</span><span class="text-[9px] font-bold text-indigo-300">8 UI</span></div>
                     <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700"><span class="text-[9px] font-black text-white block">5.0 mg</span><span class="text-[9px] font-bold text-indigo-300">16 UI</span></div>
                     <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700"><span class="text-[9px] font-black text-white block">7.5 mg</span><span class="text-[9px] font-bold text-indigo-300">24 UI</span></div>
                     <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700"><span class="text-[9px] font-black text-white block">10.0 mg</span><span class="text-[9px] font-bold text-indigo-300">32 UI</span></div>
+                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700"><span class="text-[9px] font-black text-white block">12.5 mg</span><span class="text-[9px] font-bold text-indigo-300">40 UI</span></div>
+                    <div class="bg-slate-800 rounded-lg py-1.5 border border-slate-700"><span class="text-[9px] font-black text-white block">15.0 mg</span><span class="text-[9px] font-bold text-indigo-300">48 UI</span></div>
                 </div>
             </div>
+            <div id="avisoTitulacao" class="hidden bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 text-[10px] text-amber-300 leading-relaxed"></div>
             <div class="pt-4 border-t border-slate-700 space-y-3">
                 <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">⏳ Lançar Dose Antiga</h4>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] text-slate-400 mb-0.5">Data da Aplicação</label>
+                        <label for="histData" class="block text-[10px] text-slate-400 mb-0.5">Data da Aplicação</label>
                         <input type="date" id="histData" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-slate-400 mb-0.5">Peso no Dia (kg)</label>
+                        <label for="histPeso" class="block text-[10px] text-slate-400 mb-0.5">Peso no Dia (kg)</label>
                         <input type="number" step="0.1" id="histPeso" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] text-slate-400 mb-0.5">Dose Tomada</label>
+                        <label for="histDose" class="block text-[10px] text-slate-400 mb-0.5">Dose Tomada</label>
                         <select id="histDose" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                             <option value="2.5 mg">2.5 mg — 8 UI</option>
                             <option value="5.0 mg">5.0 mg — 16 UI</option>
                             <option value="7.5 mg">7.5 mg — 24 UI</option>
                             <option value="10.0 mg">10.0 mg — 32 UI</option>
+                            <option value="12.5 mg">12.5 mg — 40 UI</option>
+                            <option value="15.0 mg">15.0 mg — 48 UI</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] text-slate-400 mb-0.5">Local do Corpo</label>
+                        <label for="histLocal" class="block text-[10px] text-slate-400 mb-0.5">Local do Corpo</label>
                         <select id="histLocal" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
                             <option value="Abdômen (Esquerdo)">Abdômen Esq</option>
                             <option value="Abdômen (Direito)">Abdômen Dir</option>
@@ -270,12 +309,35 @@
                         </select>
                     </div>
                 </div>
+                <div>
+                    <label for="histSintoma" class="block text-[10px] text-slate-400 mb-0.5">Sintomas (opcional)</label>
+                    <select id="histSintoma" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
+                        <option value="Sem Sintomas">Sem sintomas</option>
+                        <option value="Náusea leve">Náusea leve</option>
+                        <option value="Náusea moderada/forte">Náusea moderada/forte</option>
+                        <option value="Constipação">Constipação</option>
+                        <option value="Diarreia">Diarreia</option>
+                        <option value="Refluxo/Azia">Refluxo/Azia</option>
+                        <option value="Dor abdominal">Dor abdominal</option>
+                        <option value="Fadiga">Fadiga</option>
+                        <option value="Dor de cabeça">Dor de cabeça</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
                 <button onclick="inserirDoseHistorica()"
                     class="w-full bg-indigo-600 text-white py-2 rounded-xl text-xs font-semibold cursor-pointer">
                     Inserir no Histórico
                 </button>
             </div>
-            <div class="pt-2">
+            <div class="pt-2 grid grid-cols-2 gap-2">
+                <button onclick="mostrarTutorial()" class="w-full text-center text-xs text-indigo-400 hover:underline cursor-pointer py-1">
+                    📘 Ver tutorial
+                </button>
+                <button onclick="exportarCSV()" class="w-full text-center text-xs text-emerald-400 hover:underline cursor-pointer py-1">
+                    📤 Exportar CSV
+                </button>
+            </div>
+            <div class="pt-1">
                 <button onclick="limparTudo()" class="w-full text-center text-xs text-rose-400 hover:underline cursor-pointer">
                     Apagar Tudo e Resetar App
                 </button>
@@ -287,24 +349,51 @@
         ══════════════════════════════ -->
         <section id="modalLancamentoRapido"
             class="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 hidden z-50">
-            <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl max-w-xs w-full space-y-4 shadow-2xl">
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl max-w-xs w-full space-y-3 shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div class="text-center">
                     <h3 class="text-base font-black text-white">Confirmar Aplicação</h3>
                     <p id="txtSubtituloModalRapido" class="text-xs text-slate-400 mt-1">Registrando...</p>
                     <p id="txtPrevisaoModalRapido" class="text-xs text-indigo-400 font-semibold mt-1 bg-indigo-500/10 py-1 rounded-lg"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1 text-center">Data real da aplicação</label>
+                    <label for="inputDataRapida" class="block text-xs font-medium text-slate-400 mb-1 text-center">Data real da aplicação</label>
                     <input type="date" id="inputDataRapida"
                         class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-center text-sm font-bold text-white outline-none focus:border-indigo-400">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1 text-center">Peso Real Hoje (kg)</label>
+                    <label for="inputPesoRapido" class="block text-xs font-medium text-slate-400 mb-1 text-center">Peso Real Hoje (kg)</label>
                     <input type="number" step="0.1" id="inputPesoRapido"
                         class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-center text-lg font-bold text-white outline-none focus:border-emerald-400">
                 </div>
-                <!-- Sintoma oculto por segurança para não quebrar a estrutura de dados existente -->
-                <input type="hidden" id="inputSintomaRapido" value="Sem Sintomas">
+                <div>
+                    <label for="inputSintomaRapido" class="block text-xs font-medium text-slate-400 mb-1 text-center">Sintomas nesta aplicação</label>
+                    <select id="inputSintomaRapido" onchange="checarSintomaAlerta()"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white outline-none">
+                        <option value="Sem Sintomas">Sem sintomas</option>
+                        <option value="Náusea leve">Náusea leve</option>
+                        <option value="Náusea moderada/forte">Náusea moderada/forte</option>
+                        <option value="Constipação">Constipação</option>
+                        <option value="Diarreia">Diarreia</option>
+                        <option value="Refluxo/Azia">Refluxo/Azia</option>
+                        <option value="Dor abdominal">Dor abdominal</option>
+                        <option value="Fadiga">Fadiga</option>
+                        <option value="Dor de cabeça">Dor de cabeça</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                <div id="avisoSintomaGrave" class="hidden bg-rose-500/10 border border-rose-500/30 rounded-xl px-2.5 py-2 text-[10px] text-rose-300 leading-relaxed"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="inputCinturaRapido" class="block text-[10px] font-medium text-slate-400 mb-1 text-center">Cintura (cm) opc.</label>
+                        <input type="number" step="0.1" id="inputCinturaRapido" placeholder="--"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-center text-xs font-bold text-white outline-none">
+                    </div>
+                    <div>
+                        <label for="inputPARapido" class="block text-[10px] font-medium text-slate-400 mb-1 text-center">PA (ex 120/80) opc.</label>
+                        <input type="text" id="inputPARapido" placeholder="--"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-center text-xs font-bold text-white outline-none">
+                    </div>
+                </div>
                 <div class="grid grid-cols-2 gap-2 pt-1">
                     <button onclick="fecharModalRapido()" class="py-2.5 bg-slate-700 text-slate-300 rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
                     <button onclick="confirmarInjecaoRapida()" class="py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 rounded-xl text-xs font-black shadow-lg cursor-pointer">Salvar</button>
@@ -371,12 +460,21 @@
                 </div>
                 <div class="bg-slate-900/80 p-2.5 rounded-xl text-center border border-slate-800">
                     <span class="text-[10px] text-slate-400 block mb-0.5">🥗 Fibras</span>
-                    <span class="text-sm font-black text-white">25–30g</span>
+                    <span id="nutriFibra" class="text-sm font-black text-white">25–30g</span>
                     <span class="text-[8px] text-slate-500 block">por dia</span>
                 </div>
-                <div class="bg-slate-900/80 p-2.5 rounded-xl text-center border border-slate-800 grid grid-rows-2 gap-0.5 justify-center">
-                    <div><span class="text-[8px] text-slate-400 block">Eliminado</span><span id="lblTotalEliminado" class="text-[11px] font-black text-emerald-400">--</span></div>
-                    <div class="border-t border-slate-700/50 pt-0.5"><span class="text-[8px] text-slate-400 block">Média</span><span id="lblMediaSemanal" class="text-[11px] font-black text-indigo-400">--</span></div>
+                <div class="bg-slate-900/80 p-2.5 rounded-xl text-center border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block mb-0.5">💧 Água</span>
+                    <span id="nutriAgua" class="text-sm font-black text-white">--</span>
+                    <span class="text-[8px] text-slate-500 block">por dia</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="bg-slate-900/80 p-2 rounded-xl text-center border border-slate-800">
+                    <span class="text-[8px] text-slate-400 block">Eliminado</span><span id="lblTotalEliminado" class="text-[11px] font-black text-emerald-400">--</span>
+                </div>
+                <div class="bg-slate-900/80 p-2 rounded-xl text-center border border-slate-800">
+                    <span class="text-[8px] text-slate-400 block">Média</span><span id="lblMediaSemanal" class="text-[11px] font-black text-indigo-400">--</span>
                 </div>
             </div>
             <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-800 space-y-2">
@@ -419,7 +517,25 @@
                     <span>16</span><span>18.5</span><span id="imcAvaliacaoIdealMarcador">25</span><span>30</span><span>40</span>
                 </div>
                 <div class="text-[9px] text-center font-bold mt-1" id="lblClasseIMC">--</div>
+                <p class="text-[8px] text-slate-500 text-center mt-1">Faixa de referência OMS 18.5–24.9 (mesma para homens e mulheres); circunferência abdominal complementa essa leitura.</p>
             </div>
+            <div id="boxSuplementacao" class="hidden bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-2.5 py-2 text-[10px] text-indigo-300 leading-relaxed">
+                💊 Com ingestão calórica reduzida, converse com seu médico sobre reposição de vitaminas (B12, ferro) e um multivitamínico diário.
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════
+             EVOLUÇÃO DO IMC
+        ══════════════════════════════ -->
+        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider">⚖️ Evolução do IMC</h2>
+                <div class="text-right">
+                    <span id="imcAtualLabel" class="text-sm font-black text-white block">--</span>
+                    <span id="imcClasseLabel" class="text-[10px] font-bold">--</span>
+                </div>
+            </div>
+            <div class="w-full" style="height: 180px;"><canvas id="graficoIMC"></canvas></div>
         </section>
 
         <!-- ══════════════════════════════
@@ -602,13 +718,14 @@
     let configApp    = {
         pesoInicial: null, pesoMeta: null, ampolas: 1, doseAlvo: 2.5,
         altura: null, idade: null, sexo: 'M', atividade: 1.2,
-        tutorialConcluido: false
+        tutorialConcluido: false, dataUltimaMudancaDose: null
     };
     let chartInstance   = null;
     let chartIMC        = null;
     let doseParaSalvar  = null;
     let listaProjecaoPontos = [];
     let passoTutorialAtual = 1;
+    const TOTAL_PASSOS_TUTORIAL = 8;
 
     const listaMembrosRodizio = [
         { nome: 'Abdômen (Esquerdo)', sigla: 'Abd Esq' },
@@ -617,9 +734,54 @@
         { nome: 'Coxa Esquerda',      sigla: 'Cox Esq' }
     ];
     const nomesAtividade = { '1.2':'Sedentário','1.375':'Lev. Ativo','1.55':'Moderado','1.725':'Muito Ativo','1.9':'Ext. Ativo' };
-    const tabelaUI = { 2.5:8, 5.0:16, 7.5:24, 10.0:32 };
+    const tabelaUI = { 2.5:8, 5.0:16, 7.5:24, 10.0:32, 12.5:40, 15.0:48 };
     function mgParaUI(mg) { const n=parseFloat(mg); return tabelaUI[n] ?? Math.round(n*3.2); }
     function formatarDose(mgOuStr) { const n=parseFloat(mgOuStr); if(isNaN(n)) return String(mgOuStr); return `${n.toFixed(1)} mg • ${mgParaUI(n)} UI`; }
+
+    /* Sintomas considerados "sinal de alerta" — apenas informativo, não é diagnóstico */
+    const sintomasAlerta = {
+        'Dor abdominal': 'Dor abdominal intensa ou persistente (principalmente se irradiar para as costas) pode exigir avaliação médica. Se a dor for forte, procure atendimento.',
+        'Náusea moderada/forte': 'Náusea forte e persistente pode levar à desidratação. Priorize líquidos em pequenos goles e avise seu médico se não melhorar.'
+    };
+
+    /* ══════════════════════════════
+        DATA DE HOJE (chave YYYY-MM-DD local)
+     ══════════════════════════════ */
+    function obterChaveDataHoje() {
+        const hoje = new Date();
+        const ano  = hoje.getFullYear();
+        const mes  = String(hoje.getMonth() + 1).padStart(2, '0');
+        const dia  = String(hoje.getDate()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}`;
+    }
+
+    /* ══════════════════════════════
+        HELPERS DE IMC
+     ══════════════════════════════ */
+    function calcularIMCValor(peso) {
+        const alturaM = (configApp.altura || 170) / 100;
+        return peso / (alturaM * alturaM);
+    }
+    function corIMC(imc) {
+        const sexo = configApp.sexo || 'M';
+        const idealMax = sexo === 'F' ? 24.4 : 24.9;
+        if (imc < 18.5) return '#60a5fa';
+        if (imc <= idealMax) return '#34d399';
+        if (imc < 30) return '#facc15';
+        if (imc < 35) return '#fb923c';
+        if (imc < 40) return '#fb7185';
+        return '#dc2626';
+    }
+    function classeTextoIMC(imc) {
+        const sexo = configApp.sexo || 'M';
+        const idealMax = sexo === 'F' ? 24.4 : 24.9;
+        if (imc < 18.5) return 'Abaixo do peso';
+        if (imc <= idealMax) return 'Peso ideal';
+        if (imc < 30) return 'Sobrepeso';
+        if (imc < 35) return 'Obesidade Grau I';
+        if (imc < 40) return 'Obesidade Grau II';
+        return 'Obesidade Grau III';
+    }
 
     /* ══════════════════════════════
         SERVICE WORKER
@@ -651,7 +813,7 @@
         configApp = {
             pesoInicial: null, pesoMeta: null, ampolas: 1, doseAlvo: 2.5,
             altura: null, idade: null, sexo: 'M', atividade: 1.2,
-            tutorialConcluido: false
+            tutorialConcluido: false, dataUltimaMudancaDose: null
         };
         listaProjecaoPontos = [];
         doseParaSalvar = null;
@@ -712,7 +874,7 @@
             if (docSnap.exists()) {
                 const dados = docSnap.data();
                 registros = dados.registros || [];
-                configApp = { pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,tutorialConcluido:false, ...dados.configApp };
+                configApp = { pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,tutorialConcluido:false,dataUltimaMudancaDose:null, ...dados.configApp };
             } else {
                 // Se é um usuário novo, as globais foram limpas, então salvamos um banco vazio novinho
                 await setDoc(doc(db, "usuarios", usuarioAtual.uid), { registros, configApp });
@@ -740,16 +902,17 @@
     /* ══════════════════════════════
         TUTORIAL (ONBOARDING)
      ══════════════════════════════ */
-    function mostrarTutorial() {
+    window.mostrarTutorial = function mostrarTutorial() {
         passoTutorialAtual = 1;
+        document.getElementById('modalConfig').classList.add('hidden');
         document.getElementById('modalTutorial').classList.remove('hidden');
         renderizarPassoTutorial();
-    }
+    };
 
     window.avancarPassoTutorial = function(direcao) {
         passoTutorialAtual += direcao;
         if (passoTutorialAtual < 1) passoTutorialAtual = 1;
-        if (passoTutorialAtual > 4) {
+        if (passoTutorialAtual > TOTAL_PASSOS_TUTORIAL) {
             concluirTutorial();
             return;
         }
@@ -757,19 +920,18 @@
     };
 
     function renderizarPassoTutorial() {
-        document.getElementById('tutorialPassoIndice').innerText = `Passo ${passoTutorialAtual} de 4`;
-        
-        document.getElementById('passo1').classList.add('hidden');
-        document.getElementById('passo2').classList.add('hidden');
-        document.getElementById('passo3').classList.add('hidden');
-        document.getElementById('passo4').classList.add('hidden');
+        document.getElementById('tutorialPassoIndice').innerText = `Passo ${passoTutorialAtual} de ${TOTAL_PASSOS_TUTORIAL}`;
 
+        for (let i = 1; i <= TOTAL_PASSOS_TUTORIAL; i++) {
+            const el = document.getElementById(`passo${i}`);
+            if (el) el.classList.add('hidden');
+        }
         document.getElementById(`passo${passoTutorialAtual}`).classList.remove('hidden');
 
         document.getElementById('btnTutorialVoltar').disabled = (passoTutorialAtual === 1);
         const btnAvancar = document.getElementById('btnTutorialAvancar');
-        if (passoTutorialAtual === 4) {
-            btnAvancar.innerText = "Configurar Dados ⚙️";
+        if (passoTutorialAtual === TOTAL_PASSOS_TUTORIAL) {
+            btnAvancar.innerText = "Concluir ✅";
             btnAvancar.className = "px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black cursor-pointer shadow-lg shadow-emerald-900/30";
         } else {
             btnAvancar.innerText = "Próximo";
@@ -779,10 +941,11 @@
 
     async function concluirTutorial() {
         document.getElementById('modalTutorial').classList.add('hidden');
+        const jaTinhaConcluido = configApp.tutorialConcluido;
         configApp.tutorialConcluido = true;
         await salvarDadosNuvem();
         atualizarTudo();
-        toggleConfigModal();
+        if (!jaTinhaConcluido) toggleConfigModal();
     }
 
     /* ══════════════════════════════
@@ -800,19 +963,38 @@
             document.getElementById('configIdade').value       = configApp.idade   || '';
             document.getElementById('configSexo').value        = configApp.sexo    || 'M';
             document.getElementById('configAtividade').value   = configApp.atividade || 1.2;
+            document.getElementById('avisoTitulacao').classList.add('hidden');
         }
     };
     window.salvarConfiguracoes = function() {
+        const doseAnterior = configApp.doseAlvo;
         configApp.pesoInicial = parseFloat(document.getElementById('configPesoInicial').value) || null;
         configApp.pesoMeta    = parseFloat(document.getElementById('configPesoMeta').value)    || null;
-        configApp.ampolas     = parseInt(document.getElementById('configAmpolas').value)        || 1;
+        configApp.ampolas     = Math.max(1, parseInt(document.getElementById('configAmpolas').value) || 1);
         configApp.doseAlvo    = parseFloat(document.getElementById('configDoseAlvo').value)    || 2.5;
         configApp.altura      = parseInt(document.getElementById('configAltura').value)         || null;
         configApp.idade       = parseInt(document.getElementById('configIdade').value)          || null;
         configApp.sexo        = document.getElementById('configSexo').value;
         configApp.atividade   = parseFloat(document.getElementById('configAtividade').value)   || 1.2;
-        toggleConfigModal();
+
+        // Aviso de titulação segura: alerta (não bloqueia) se a dose subiu antes de 4 semanas
+        const avisoBox = document.getElementById('avisoTitulacao');
+        if (configApp.doseAlvo > doseAnterior) {
+            const hojeISO = obterChaveDataHoje();
+            if (configApp.dataUltimaMudancaDose) {
+                const dias = Math.round((new Date(hojeISO) - new Date(configApp.dataUltimaMudancaDose)) / 86400000);
+                if (dias < 28) {
+                    avisoBox.innerText = `⚠️ Você aumentou a dose com apenas ${dias} dia(s) desde a última mudança. A titulação do Mounjaro costuma exigir no mínimo 4 semanas no mesmo nível — confirme esse aumento com seu médico.`;
+                    avisoBox.classList.remove('hidden');
+                }
+            }
+            configApp.dataUltimaMudancaDose = hojeISO;
+        } else if (configApp.doseAlvo !== doseAnterior) {
+            configApp.dataUltimaMudancaDose = obterChaveDataHoje();
+        }
+
         salvarDadosNuvem().then(() => atualizarTudo());
+        if (avisoBox.classList.contains('hidden')) toggleConfigModal();
     };
     window.deletarRegistroUnico = async function(id) {
         if (confirm("Apagar este registro?")) {
@@ -823,15 +1005,38 @@
     };
 
     /* ══════════════════════════════
+        EXPORTAÇÃO CSV
+     ══════════════════════════════ */
+    window.exportarCSV = function() {
+        if (registros.length === 0) { alert('Nenhum registro para exportar ainda.'); return; }
+        const cronologico = [...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
+        let csv = 'Data;Peso (kg);Dose;Local;Sintomas;Cintura (cm);Pressao Arterial\n';
+        cronologico.forEach(r => {
+            csv += `${r.dataRaw};${r.peso};${r.dose};${r.local||''};${r.sintoma||''};${r.cintura||''};${r.pa||''}\n`;
+        });
+        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mounjaro_historico_${obterChaveDataHoje()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        mostrarToast('📤 CSV exportado!');
+    };
+
+    /* ══════════════════════════════
         DOSE HISTÓRICA
      ══════════════════════════════ */
     window.inserirDoseHistorica = async function() {
-        const dataS  = document.getElementById('histData').value;
-        const pesoS  = parseFloat(document.getElementById('histPeso').value);
-        const doseS  = document.getElementById('histDose').value;
-        const localS = document.getElementById('histLocal').value;
+        const dataS   = document.getElementById('histData').value;
+        const pesoS   = parseFloat(document.getElementById('histPeso').value);
+        const doseS   = document.getElementById('histDose').value;
+        const localS  = document.getElementById('histLocal').value;
+        const sintomaS = document.getElementById('histSintoma').value;
         if (!dataS || !pesoS) { alert("Preencha data e peso."); return; }
-        registros.push({ id:Date.now(), dataRaw:dataS, dataFormatada:`${dataS.split('-')[2]}/${dataS.split('-')[1]}`, peso:pesoS, dose:doseS, local:localS, sintoma:"Sem Sintomas" });
+        registros.push({ id:Date.now(), dataRaw:dataS, dataFormatada:`${dataS.split('-')[2]}/${dataS.split('-')[1]}`, peso:pesoS, dose:doseS, local:localS, sintoma:sintomaS });
         document.getElementById('histData').value = '';
         document.getElementById('histPeso').value = '';
         await salvarDadosNuvem();
@@ -841,6 +1046,16 @@
     /* ══════════════════════════════
         MODAL RÁPIDO
      ══════════════════════════════ */
+    window.checarSintomaAlerta = function() {
+        const sintoma = document.getElementById('inputSintomaRapido').value;
+        const box = document.getElementById('avisoSintomaGrave');
+        if (sintomasAlerta[sintoma]) {
+            box.innerText = '⚠️ ' + sintomasAlerta[sintoma];
+            box.classList.remove('hidden');
+        } else {
+            box.classList.add('hidden');
+        }
+    };
     window.abrirModalRegistroRapido = function(numSem, dataRaw, local, pesoPrevisto) {
         doseParaSalvar = { semana:numSem, dataPrevista:dataRaw, local };
 
@@ -859,6 +1074,10 @@
         document.getElementById('txtSubtituloModalRapido').innerText = `Semana ${numSem} • Previsto ${dataRaw.split('-')[2]}/${dataRaw.split('-')[1]} • ${formatarDose(configApp.doseAlvo)}`;
         document.getElementById('txtPrevisaoModalRapido').innerText  = avisoAtraso || `📉 Peso previsto: ${pesoPrevisto} kg`;
         document.getElementById('inputPesoRapido').value             = pesoPrevisto;
+        document.getElementById('inputSintomaRapido').value          = 'Sem Sintomas';
+        document.getElementById('inputCinturaRapido').value          = '';
+        document.getElementById('inputPARapido').value               = '';
+        document.getElementById('avisoSintomaGrave').classList.add('hidden');
         const inputData = document.getElementById('inputDataRapida');
         inputData.value = hojeISO;
         inputData.max   = hojeISO;
@@ -868,11 +1087,13 @@
     window.confirmarInjecaoRapida = async function() {
         const peso     = parseFloat(document.getElementById('inputPesoRapido').value);
         const sintoma  = document.getElementById('inputSintomaRapido').value;
+        const cintura  = parseFloat(document.getElementById('inputCinturaRapido').value) || null;
+        const pa       = document.getElementById('inputPARapido').value.trim() || null;
         const dataReal = document.getElementById('inputDataRapida').value || obterChaveDataHoje();
         if (!peso) return;
         if (!dataReal) { alert("Informe a data real da aplicação."); return; }
         const [ano, mes, dia] = dataReal.split('-');
-        const novaReg = { id:Date.now(), dataRaw:dataReal, dataFormatada:`${dia}/${mes}`, peso, dose:configApp.doseAlvo+" mg", doseUI:mgParaUI(configApp.doseAlvo), local:doseParaSalvar.local, sintoma };
+        const novaReg = { id:Date.now(), dataRaw:dataReal, dataFormatada:`${dia}/${mes}`, peso, dose:configApp.doseAlvo+" mg", doseUI:mgParaUI(configApp.doseAlvo), local:doseParaSalvar.local, sintoma, cintura, pa };
         registros.push(novaReg);
         fecharModalRapido();
         await salvarDadosNuvem();
@@ -883,6 +1104,17 @@
     /* ══════════════════════════════
         METABOLISMO E IMC POR SEXO
      ══════════════════════════════ */
+    function pesoAjustadoProteina(pesoAtual) {
+        // Para IMC > 30, usa peso corporal ajustado (referência clínica) em vez do peso real,
+        // evitando superestimar a meta de proteína em pessoas com maior massa gorda.
+        const altura  = (configApp.altura || 170) / 100;
+        const sexo    = configApp.sexo || 'M';
+        const imcAtual = pesoAtual / (altura*altura);
+        if (imcAtual <= 30) return pesoAtual;
+        const pesoIdealAprox = (sexo === 'F' ? 21.0 : 22.0) * altura * altura;
+        return pesoIdealAprox + 0.4 * (pesoAtual - pesoIdealAprox);
+    }
+
     function calcularMetabolismo(pesoAtual, perdaSemanalMedia) {
         const altura     = configApp.altura || 170;
         const idade      = configApp.idade  || 30;
@@ -892,8 +1124,11 @@
         const tmb        = (10*pesoAtual) + (6.25*altura) - (5*idade) + fSexo;
         const tdee       = tmb * fAtividade;
         const deficitDia = (perdaSemanalMedia * 7700) / 7;
-        let   alvo       = Math.max(1200, tdee - deficitDia);
-        const proteina   = Math.round(pesoAtual * (sexo === 'F' ? 1.6 : 1.8));
+        const pisoCalorico = sexo === 'F' ? 1200 : 1500;
+        let   alvo       = Math.max(pisoCalorico, tdee - deficitDia);
+        const proteina   = Math.round(pesoAjustadoProteina(pesoAtual) * (sexo === 'F' ? 1.6 : 1.8));
+        const fibraAlvo  = Math.min(40, Math.max(25, Math.round((alvo/1000)*14)));
+        const aguaMl     = Math.round(pesoAtual * 35);
         const alturaM    = altura / 100;
         const imc        = pesoAtual / (alturaM*alturaM);
 
@@ -901,6 +1136,8 @@
         document.getElementById('imcAvaliacaoIdealMarcador').innerText = imcIdealMax;
 
         document.getElementById('nutriProteina').innerText      = `${proteina}g`;
+        document.getElementById('nutriFibra').innerText         = `${fibraAlvo}g`;
+        document.getElementById('nutriAgua').innerText          = `${(aguaMl/1000).toFixed(1)}L`;
         document.getElementById('nutriTMB').innerText           = `${Math.round(tmb)} kcal`;
         document.getElementById('nutriGastoTotal').innerText    = `${Math.round(tdee)} kcal`;
         document.getElementById('nutriCaloriasAlvo').innerText  = `${Math.round(alvo)} kcal`;
@@ -914,24 +1151,20 @@
         barD.className = `h-full w-0 transition-all duration-500 rounded-full ${deficitReal<300?'bg-blue-500':deficitReal<=750?'bg-amber-500':'bg-rose-500'}`;
         setTimeout(()=>{ barD.style.width=`${pctD}%`; },50);
 
+        // Aviso de suplementação quando a meta calórica está próxima do piso de segurança
+        document.getElementById('boxSuplementacao').classList.toggle('hidden', alvo > pisoCalorico + 150);
+
         if (configApp.altura) {
             document.getElementById('boxIMC').classList.remove('hidden');
             document.getElementById('lblIMCValor').innerText = imc.toFixed(1);
             
-            let cl = { txt: 'Desconhecido', cor: 'text-slate-400' };
-            if (imc < 18.5) {
-                cl = { txt: 'Abaixo do peso', cor: 'text-blue-400' };
-            } else if (imc <= imcIdealMax) {
-                cl = { txt: 'Peso ideal ✅', cor: 'text-emerald-400' };
-            } else if (imc < 30) {
-                cl = { txt: 'Sobrepeso', cor: 'text-yellow-400' };
-            } else if (imc < 35) {
-                cl = { txt: 'Obesidade Grau I', cor: 'text-orange-400' };
-            } else if (imc < 40) {
-                cl = { txt: 'Obesidade Grau II', cor: 'text-rose-400' };
-            } else {
-                cl = { txt: 'Obesidade Grau III', cor: 'text-red-600' };
-            }
+            let cl = { txt: classeTextoIMC(imc), cor: '' };
+            if (imc < 18.5) cl.cor = 'text-blue-400';
+            else if (imc <= imcIdealMax) { cl.txt = 'Peso ideal ✅'; cl.cor = 'text-emerald-400'; }
+            else if (imc < 30) cl.cor = 'text-yellow-400';
+            else if (imc < 35) cl.cor = 'text-orange-400';
+            else if (imc < 40) cl.cor = 'text-rose-400';
+            else cl.cor = 'text-red-600';
             
             const lblC = document.getElementById('lblClasseIMC');
             lblC.innerText = cl.txt; lblC.className = `text-[9px] text-center font-bold mt-1 ${cl.cor}`;
@@ -941,7 +1174,7 @@
 
         const alertaBox = document.getElementById('boxAlertaClinico');
         if (perdaSemanalMedia > 1.5) {
-            alertaBox.innerHTML = `<span>⚠️</span> Perda muito rápida (${perdaSemanalMedia.toFixed(2)} kg/sem). Priorize ${proteina}g de proteína para preservar massa magra.`;
+            alertaBox.innerHTML = `<span>⚠️</span> Perda muito rápida (${perdaSemanalMedia.toFixed(2)} kg/sem). Priorize ${proteina}g de proteína e treino de força para preservar massa magra, e converse com seu médico.`;
             alertaBox.classList.remove('hidden');
         } else { alertaBox.classList.add('hidden'); }
     }
@@ -1278,9 +1511,12 @@
             const isPrim=idx===0;
             let varHtml='';
             if(idx<ordenado.length-1){const diff=reg.peso-ordenado[idx+1].peso;varHtml=diff<0?`<span class="text-[9px] font-bold text-emerald-400">▼ ${Math.abs(diff).toFixed(1)} kg</span>`:diff>0?`<span class="text-[9px] font-bold text-rose-400">▲ ${diff.toFixed(1)} kg</span>`:`<span class="text-[9px] text-slate-500">= sem variação</span>`;}
+            const temSintoma = reg.sintoma && reg.sintoma !== 'Sem Sintomas';
+            const sintomaHtml = temSintoma ? `<span class="text-[9px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md">🩺 ${reg.sintoma}</span>` : '';
+            const extraHtml = (reg.cintura || reg.pa) ? `<div class="flex items-center gap-2 flex-wrap mt-1">${reg.cintura?`<span class="text-[9px] text-slate-500">📏 ${reg.cintura}cm</span>`:''}${reg.pa?`<span class="text-[9px] text-slate-500">❤️ ${reg.pa}</span>`:''}</div>` : '';
             const item=document.createElement('div');
             item.className=`rounded-xl border p-3 ${isPrim?'bg-slate-900/80 border-indigo-500/20':'bg-slate-900/40 border-slate-800'}`;
-            item.innerHTML=`<div class="flex justify-between items-start"><div class="flex items-center gap-2.5"><div class="text-center bg-slate-800 rounded-lg px-2 py-1.5 border border-slate-700 min-w-[38px]"><span class="text-sm font-black text-white leading-none block">${reg.dataFormatada.split('/')[0]}</span><span class="text-[9px] text-slate-400 font-semibold">/${reg.dataFormatada.split('/')[1]||''}</span></div><div class="space-y-0.5"><div class="flex items-center gap-2"><span class="text-sm font-black text-white">${reg.peso} kg</span>${varHtml}${isPrim?'<span class="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded-md font-bold">Última</span>':''}</div><div class="flex items-center gap-2 flex-wrap"><span class="text-[9px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">${formatarDose(reg.dose)}</span><span class="flex items-center gap-1 text-[9px] ${loc.cor}"><span class="w-1.5 h-1.5 rounded-full ${loc.dot}"></span>${reg.local}</span></div></div></div><button onclick="deletarRegistroUnico(${reg.id})" class="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 active:scale-90 transition-all cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`;
+            item.innerHTML=`<div class="flex justify-between items-start"><div class="flex items-center gap-2.5"><div class="text-center bg-slate-800 rounded-lg px-2 py-1.5 border border-slate-700 min-w-[38px]"><span class="text-sm font-black text-white leading-none block">${reg.dataFormatada.split('/')[0]}</span><span class="text-[9px] text-slate-400 font-semibold">/${reg.dataFormatada.split('/')[1]||''}</span></div><div class="space-y-0.5"><div class="flex items-center gap-2"><span class="text-sm font-black text-white">${reg.peso} kg</span>${varHtml}${isPrim?'<span class="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded-md font-bold">Última</span>':''}</div><div class="flex items-center gap-2 flex-wrap"><span class="text-[9px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">${formatarDose(reg.dose)}</span><span class="flex items-center gap-1 text-[9px] ${loc.cor}"><span class="w-1.5 h-1.5 rounded-full ${loc.dot}"></span>${reg.local}</span>${sintomaHtml}</div>${extraHtml}</div></div><button onclick="deletarRegistroUnico(${reg.id})" class="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 active:scale-90 transition-all cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`;
             listaHtml.appendChild(item);
         });
     }
@@ -1291,7 +1527,7 @@
     window.limparTudo = async function() {
         if(confirm('Apagar todo o histórico da nuvem?')){
             registros=[];
-            configApp={pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,tutorialConcluido:false};
+            configApp={pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,tutorialConcluido:false,dataUltimaMudancaDose:null};
             await setDoc(doc(db,"usuarios",usuarioAtual.uid),{registros,configApp});
             toggleConfigModal(); atualizarTudo();
         }
