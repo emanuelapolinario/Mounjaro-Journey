@@ -645,17 +645,39 @@
         setTimeout(() => { t.style.opacity = '0'; }, dur);
     }
 
+    /* Reseta completamente a memória do cliente para segurança multi-usuário */
+    function resetarVariaveisGlobaisLocais() {
+        registros = [];
+        configApp = {
+            pesoInicial: null, pesoMeta: null, ampolas: 1, doseAlvo: 2.5,
+            altura: null, idade: null, sexo: 'M', atividade: 1.2,
+            tutorialConcluido: false
+        };
+        listaProjecaoPontos = [];
+        doseParaSalvar = null;
+        passoTutorialAtual = 1;
+        
+        // Destruição segura de instâncias de gráficos antigos do outro usuário
+        if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+        if (chartIMC) { chartIMC.destroy(); chartIMC = null; }
+    }
+
     /* ══════════════════════════════
         AUTH
      ══════════════════════════════ */
     onAuthStateChanged(auth, async (user) => {
         if (user) {
+            // Limpa dados fantasmas da sessão anterior antes de carregar o novo perfil
+            resetarVariaveisGlobaisLocais();
+            
             usuarioAtual = user;
             document.getElementById('telaLogin').classList.add('hidden');
             document.getElementById('conteudoApp').classList.remove('hidden');
             document.getElementById('lblUserEmail').innerText = user.email;
             await carregarDadosNuvem();
         } else {
+            // Se o usuário deslogar, limpa tudo imediatamente
+            resetarVariaveisGlobaisLocais();
             usuarioAtual = null;
             document.getElementById('telaLogin').classList.remove('hidden');
             document.getElementById('conteudoApp').classList.add('hidden');
@@ -673,7 +695,12 @@
             .then(() => signInWithEmailAndPassword(auth, email, senha))
             .catch(err => alert(`Erro: ${err.message}`));
     };
-    window.fazerLogout = function() { signOut(auth); };
+    
+    // Função logout segura: reseta dados locais antes de mandar o comando de saída ao Firebase
+    window.fazerLogout = function() { 
+        resetarVariaveisGlobaisLocais();
+        signOut(auth); 
+    };
 
     /* ══════════════════════════════
         FIRESTORE
@@ -686,10 +713,9 @@
                 const dados = docSnap.data();
                 registros = dados.registros || [];
                 configApp = { pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,tutorialConcluido:false, ...dados.configApp };
-                if (!configApp.sexo)      configApp.sexo      = 'M';
-                if (!configApp.atividade) configApp.atividade = 1.2;
             } else {
-                await salvarDadosNuvem();
+                // Se é um usuário novo, as globais foram limpas, então salvamos um banco vazio novinho
+                await setDoc(doc(db, "usuarios", usuarioAtual.uid), { registros, configApp });
             }
 
             if (!configApp.tutorialConcluido) {
@@ -862,8 +888,8 @@
         const idade      = configApp.idade  || 30;
         const sexo       = configApp.sexo   || 'M';
         const fAtividade = parseFloat(configApp.atividade) || 1.2;
-        const fatorSexo  = sexo === 'F' ? -161 : 5;
-        const tmb        = (10*pesoAtual) + (6.25*altura) - (5*idade) + fatorSexo;
+        const fSexo  = sexo === 'F' ? -161 : 5;
+        const tmb        = (10*pesoAtual) + (6.25*altura) - (5*idade) + fSexo;
         const tdee       = tmb * fAtividade;
         const deficitDia = (perdaSemanalMedia * 7700) / 7;
         let   alvo       = Math.max(1200, tdee - deficitDia);
@@ -871,7 +897,6 @@
         const alturaM    = altura / 100;
         const imc        = pesoAtual / (alturaM*alturaM);
 
-        // Limites de IMC Ideais Diferenciados por Sexo Clínico
         const imcIdealMax = sexo === 'F' ? 24.4 : 24.9;
         document.getElementById('imcAvaliacaoIdealMarcador').innerText = imcIdealMax;
 
@@ -893,7 +918,6 @@
             document.getElementById('boxIMC').classList.remove('hidden');
             document.getElementById('lblIMCValor').innerText = imc.toFixed(1);
             
-            // Classificação dinâmica do IMC baseada nos limites de sexo
             let cl = { txt: 'Desconhecido', cor: 'text-slate-400' };
             if (imc < 18.5) {
                 cl = { txt: 'Abaixo do peso', cor: 'text-blue-400' };
