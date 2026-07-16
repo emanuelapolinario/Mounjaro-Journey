@@ -235,6 +235,11 @@
                     <p id="txtPrevisaoModalRapido" class="text-xs text-indigo-400 font-semibold mt-1 bg-indigo-500/10 py-1 rounded-lg"></p>
                 </div>
                 <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1 text-center">Data real da aplicação</label>
+                    <input type="date" id="inputDataRapida"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-center text-sm font-bold text-white outline-none focus:border-indigo-400">
+                </div>
+                <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1 text-center">Peso Real Hoje (kg)</label>
                     <input type="number" step="0.1" id="inputPesoRapido"
                         class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-center text-lg font-bold text-white outline-none focus:border-emerald-400">
@@ -1047,18 +1052,40 @@
        MODAL RÁPIDO
     ══════════════════════════════ */
     window.abrirModalRegistroRapido = function(numSem, dataRaw, local, pesoPrevisto) {
-        doseParaSalvar = { semana:numSem, dataRaw, local };
-        document.getElementById('txtSubtituloModalRapido').innerText = `Semana ${numSem} • ${dataRaw.split('-')[2]}/${dataRaw.split('-')[1]} • ${formatarDose(configApp.doseAlvo)}`;
-        document.getElementById('txtPrevisaoModalRapido').innerText  = `📉 Peso previsto: ${pesoPrevisto} kg`;
+        doseParaSalvar = { semana:numSem, dataPrevista:dataRaw, local };
+
+        const hojeISO   = obterChaveDataHoje();
+        const dPrevista = new Date(dataRaw + 'T12:00:00');
+        const dHoje     = new Date(hojeISO  + 'T12:00:00');
+        const diffDias  = Math.round((dHoje - dPrevista) / (1000*60*60*24));
+
+        let avisoAtraso = '';
+        if (diffDias > 0) {
+            avisoAtraso = `⏰ Atrasado ${diffDias} dia${diffDias>1?'s':''} — data real ajustada para hoje.`;
+        } else if (diffDias < 0) {
+            avisoAtraso = `📅 Adiantado ${Math.abs(diffDias)} dia${Math.abs(diffDias)>1?'s':''} em relação ao previsto.`;
+        }
+
+        document.getElementById('txtSubtituloModalRapido').innerText = `Semana ${numSem} • Previsto ${dataRaw.split('-')[2]}/${dataRaw.split('-')[1]} • ${formatarDose(configApp.doseAlvo)}`;
+        document.getElementById('txtPrevisaoModalRapido').innerText  = avisoAtraso || `📉 Peso previsto: ${pesoPrevisto} kg`;
         document.getElementById('inputPesoRapido').value             = pesoPrevisto;
+        // A data real da aplicação sempre parte de HOJE (editável), nunca da data prevista no calendário —
+        // isso evita que um atraso fique "congelado" e distorça as próximas previsões, a nota de desempenho
+        // e a correlação de sintomas por dia pós-dose.
+        const inputData = document.getElementById('inputDataRapida');
+        inputData.value = hojeISO;
+        inputData.max   = hojeISO;
         document.getElementById('modalLancamentoRapido').classList.remove('hidden');
     };
     window.fecharModalRapido = function() { document.getElementById('modalLancamentoRapido').classList.add('hidden'); };
     window.confirmarInjecaoRapida = async function() {
-        const peso    = parseFloat(document.getElementById('inputPesoRapido').value);
-        const sintoma = document.getElementById('inputSintomaRapido').value;
+        const peso     = parseFloat(document.getElementById('inputPesoRapido').value);
+        const sintoma  = document.getElementById('inputSintomaRapido').value;
+        const dataReal = document.getElementById('inputDataRapida').value || obterChaveDataHoje();
         if (!peso) return;
-        const novaReg = { id:Date.now(), dataRaw:doseParaSalvar.dataRaw, dataFormatada:`${doseParaSalvar.dataRaw.split('-')[2]}/${doseParaSalvar.dataRaw.split('-')[1]}`, peso, dose:configApp.doseAlvo+" mg", doseUI:mgParaUI(configApp.doseAlvo), local:doseParaSalvar.local, sintoma };
+        if (!dataReal) { alert("Informe a data real da aplicação."); return; }
+        const [ano, mes, dia] = dataReal.split('-');
+        const novaReg = { id:Date.now(), dataRaw:dataReal, dataFormatada:`${dia}/${mes}`, peso, dose:configApp.doseAlvo+" mg", doseUI:mgParaUI(configApp.doseAlvo), local:doseParaSalvar.local, sintoma };
         registros.push(novaReg);
         fecharModalRapido();
         await salvarDadosNuvem();
