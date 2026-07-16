@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mounjaro">
     <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link class="apple-touch-icon" href="/icons/icon-192.png">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -80,6 +80,52 @@
                 class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold rounded-xl text-sm active:opacity-90 cursor-pointer">
                 Entrar
             </button>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     MODAL DE TUTORIAL (ONBOARDING) - NOVO!
+═══════════════════════════════════════════ -->
+<section id="modalTutorial" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center px-4 hidden">
+    <div class="bg-slate-850 border border-slate-700 p-6 rounded-3xl max-w-sm w-full space-y-6 shadow-2xl relative">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Tutorial de Início</span>
+            <span id="tutorialPassoIndice" class="text-xs text-slate-500 font-mono">Passo 1 de 4</span>
+        </div>
+
+        <!-- Conteúdo dos Passos -->
+        <div id="tutorialConteudo" class="min-h-[220px] flex flex-col justify-center space-y-4">
+            <!-- Passo 1 -->
+            <div id="passo1" class="space-y-3">
+                <div class="text-3xl text-center">🎯</div>
+                <h3 class="text-base font-bold text-white text-center">Bem-vindo ao Mounjaro Journey!</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">Este app foi desenhado para acompanhar de perto cada etapa da sua jornada. Aqui você monitora suas doses, perda de peso, sintomas e estoque em tempo real.</p>
+            </div>
+            <!-- Passo 2 -->
+            <div id="passo2" class="space-y-3 hidden">
+                <div class="text-3xl text-center">💉</div>
+                <h3 class="text-base font-bold text-white text-center">Controle Visual de Estoque</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">Você lança a quantidade total de ampolas de 15mg que possui. O app calcula o rendimento exato baseado na sua dose alvo (ex: 2.5mg ou 5mg) e te avisa quando o estoque estiver chegando ao fim.</p>
+            </div>
+            <!-- Passo 3 -->
+            <div id="passo3" class="space-y-3 hidden">
+                <div class="text-3xl text-center">📉</div>
+                <h3 class="text-base font-bold text-white text-center">Projeções de Peso Inteligentes</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">Nossos algoritmos analisam seu histórico recente. Se o ritmo de perda de peso diminuir (platô), a inteligência do app recalcula as datas previstas para atingir suas metas de forma realista.</p>
+            </div>
+            <!-- Passo 4 -->
+            <div id="passo4" class="space-y-3 hidden">
+                <div class="text-3xl text-center">⚙️</div>
+                <h3 class="text-base font-bold text-white text-center">Configuração Inicial Obrigatória</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">Para começar, clique no botão abaixo para preencher seu peso atual, altura e meta. Sem esses parâmetros, as previsões matemáticas não serão exibidas.</p>
+            </div>
+        </div>
+
+        <!-- Navegação do Tutorial -->
+        <div class="flex items-center justify-between pt-3 border-t border-slate-800/60">
+            <button id="btnTutorialVoltar" onclick="avancarPassoTutorial(-1)" class="px-4 py-2 bg-slate-800 text-slate-400 rounded-xl text-xs font-bold disabled:opacity-30 cursor-pointer" disabled>Voltar</button>
+            <button id="btnTutorialAvancar" onclick="avancarPassoTutorial(1)" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black cursor-pointer shadow-lg shadow-indigo-900/30">Próximo</button>
         </div>
     </div>
 </section>
@@ -475,7 +521,7 @@
         </section>
 
         <!-- ══════════════════════════════
-             NOTA DE DESEMPENHO  ← NOVO
+             NOTA DE DESEMPENHO
         ══════════════════════════════ -->
         <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/60 space-y-3">
             <div class="flex items-center gap-2">
@@ -547,7 +593,7 @@
         </section>
 
         <!-- ══════════════════════════════
-             GRÁFICO IMC  ← NOVO
+             GRÁFICO IMC
         ══════════════════════════════ -->
         <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
             <div class="flex justify-between items-center">
@@ -567,7 +613,7 @@
         </section>
 
         <!-- ══════════════════════════════
-             SINTOMAS × DIA PÓS-DOSE  ← NOVO
+             SINTOMAS × DIA PÓS-DOSE
         ══════════════════════════════ -->
         <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
             <div class="flex items-center gap-2">
@@ -707,13 +753,14 @@
     let configApp    = {
         pesoInicial: null, pesoMeta: null, ampolas: 1, doseAlvo: 2.5,
         altura: null, idade: null, sexo: 'M', atividade: 1.2, aguaLog: {},
-        notifDose: true, notifAgua: true
+        notifDose: true, notifAgua: true, tutorialConcluido: false
     };
     let chartInstance   = null;
     let chartIMC        = null;
     let doseParaSalvar  = null;
     let dadosCorrelacao = {};
     let listaProjecaoPontos = [];
+    let passoTutorialAtual = 1;
 
     const listaMembrosRodizio = [
         { nome: 'Abdômen (Esquerdo)', sigla: 'Abd Esq' },
@@ -727,8 +774,8 @@
     function formatarDose(mgOuStr) { const n=parseFloat(mgOuStr); if(isNaN(n)) return String(mgOuStr); return `${n.toFixed(1)} mg • ${mgParaUI(n)} UI`; }
 
     /* ══════════════════════════════
-       SERVICE WORKER
-    ══════════════════════════════ */
+        SERVICE WORKER
+     ══════════════════════════════ */
     async function registrarSW() {
         if (!('serviceWorker' in navigator)) return;
         try {
@@ -774,8 +821,8 @@
     registrarSW();
 
     /* ══════════════════════════════
-       TOAST
-    ══════════════════════════════ */
+        TOAST
+     ══════════════════════════════ */
     function mostrarToast(msg, dur = 3000) {
         const t = document.getElementById('swToast');
         t.innerText = msg;
@@ -784,8 +831,8 @@
     }
 
     /* ══════════════════════════════
-       NOTIFICAÇÕES
-    ══════════════════════════════ */
+        NOTIFICAÇÕES
+     ══════════════════════════════ */
     function verificarStatusNotificacoes() {
         const statusEl = document.getElementById('notifStatus');
         const btnAtiv  = document.getElementById('btnAtivNotif');
@@ -887,8 +934,8 @@
     agendarVerificacaoAgua();
 
     /* ══════════════════════════════
-       AUTH
-    ══════════════════════════════ */
+        AUTH
+     ══════════════════════════════ */
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             usuarioAtual = user;
@@ -920,8 +967,8 @@
     window.fazerLogout = function() { signOut(auth); };
 
     /* ══════════════════════════════
-       FIRESTORE
-    ══════════════════════════════ */
+        FIRESTORE
+     ══════════════════════════════ */
     async function carregarDadosNuvem() {
         if (!usuarioAtual) return;
         try {
@@ -929,14 +976,20 @@
             if (docSnap.exists()) {
                 const dados = docSnap.data();
                 registros = dados.registros || [];
-                configApp = { pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,aguaLog:{},notifDose:true,notifAgua:true, ...dados.configApp };
+                configApp = { pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,aguaLog:{},notifDose:true,notifAgua:true,tutorialConcluido:false, ...dados.configApp };
                 if (!configApp.aguaLog)   configApp.aguaLog   = {};
                 if (!configApp.sexo)      configApp.sexo      = 'M';
                 if (!configApp.atividade) configApp.atividade = 1.2;
             } else {
                 await salvarDadosNuvem();
             }
-            atualizarTudo();
+
+            // Exibir tutorial para novos usuários (ou quem não concluiu ainda)
+            if (!configApp.tutorialConcluido) {
+                mostrarTutorial();
+            } else {
+                atualizarTudo();
+            }
             sincronizarConfigComSW();
         } catch(err) { console.error(err); }
     }
@@ -954,8 +1007,60 @@
     }
 
     /* ══════════════════════════════
-       MODAL CONFIG
-    ══════════════════════════════ */
+        TUTORIAL (ONBOARDING) - NOVO!
+     ══════════════════════════════ */
+    function mostrarTutorial() {
+        passoTutorialAtual = 1;
+        document.getElementById('modalTutorial').classList.remove('hidden');
+        renderizarPassoTutorial();
+    }
+
+    window.avancarPassoTutorial = function(direcao) {
+        passoTutorialAtual += direcao;
+        if (passoTutorialAtual < 1) passoTutorialAtual = 1;
+        if (passoTutorialAtual > 4) {
+            concluirTutorial();
+            return;
+        }
+        renderizarPassoTutorial();
+    };
+
+    function renderizarPassoTutorial() {
+        document.getElementById('tutorialPassoIndice').innerText = `Passo ${passoTutorialAtual} de 4`;
+        
+        // Oculta todos
+        document.getElementById('passo1').classList.add('hidden');
+        document.getElementById('passo2').classList.add('hidden');
+        document.getElementById('passo3').classList.add('hidden');
+        document.getElementById('passo4').classList.add('hidden');
+
+        // Mostra o atual
+        document.getElementById(`passo${passoTutorialAtual}`).classList.remove('hidden');
+
+        // Configura os botões
+        document.getElementById('btnTutorialVoltar').disabled = (passoTutorialAtual === 1);
+        const btnAvancar = document.getElementById('btnTutorialAvancar');
+        if (passoTutorialAtual === 4) {
+            btnAvancar.innerText = "Começar Já! ⚙️";
+            btnAvancar.className = "px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black cursor-pointer shadow-lg shadow-emerald-900/30";
+        } else {
+            btnAvancar.innerText = "Próximo";
+            btnAvancar.className = "px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black cursor-pointer shadow-lg shadow-indigo-900/30";
+        }
+    }
+
+    async function concluirTutorial() {
+        document.getElementById('modalTutorial').classList.add('hidden');
+        configApp.tutorialConcluido = true;
+        await salvarDadosNuvem();
+        atualizarTudo();
+        // Abre as configurações automaticamente para o usuário digitar os dados iniciais obrigatórios
+        toggleConfigModal();
+    }
+
+    /* ══════════════════════════════
+        MODAL CONFIG
+     ══════════════════════════════ */
     window.toggleConfigModal = function() {
         const modal = document.getElementById('modalConfig');
         modal.classList.toggle('hidden');
@@ -991,8 +1096,8 @@
     };
 
     /* ══════════════════════════════
-       ÁGUA
-    ══════════════════════════════ */
+        ÁGUA
+     ══════════════════════════════ */
     function obterChaveDataHoje() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -1033,8 +1138,8 @@
     }
 
     /* ══════════════════════════════
-       DOSE HISTÓRICA
-    ══════════════════════════════ */
+        DOSE HISTÓRICA
+     ══════════════════════════════ */
     window.inserirDoseHistorica = async function() {
         const dataS  = document.getElementById('histData').value;
         const pesoS  = parseFloat(document.getElementById('histPeso').value);
@@ -1049,8 +1154,8 @@
     };
 
     /* ══════════════════════════════
-       MODAL RÁPIDO
-    ══════════════════════════════ */
+        MODAL RÁPIDO
+     ══════════════════════════════ */
     window.abrirModalRegistroRapido = function(numSem, dataRaw, local, pesoPrevisto) {
         doseParaSalvar = { semana:numSem, dataPrevista:dataRaw, local };
 
@@ -1069,9 +1174,6 @@
         document.getElementById('txtSubtituloModalRapido').innerText = `Semana ${numSem} • Previsto ${dataRaw.split('-')[2]}/${dataRaw.split('-')[1]} • ${formatarDose(configApp.doseAlvo)}`;
         document.getElementById('txtPrevisaoModalRapido').innerText  = avisoAtraso || `📉 Peso previsto: ${pesoPrevisto} kg`;
         document.getElementById('inputPesoRapido').value             = pesoPrevisto;
-        // A data real da aplicação sempre parte de HOJE (editável), nunca da data prevista no calendário —
-        // isso evita que um atraso fique "congelado" e distorça as próximas previsões, a nota de desempenho
-        // e a correlação de sintomas por dia pós-dose.
         const inputData = document.getElementById('inputDataRapida');
         inputData.value = hojeISO;
         inputData.max   = hojeISO;
@@ -1091,7 +1193,6 @@
         await salvarDadosNuvem();
         atualizarTudo();
         mostrarToast('💉 Dose registrada!');
-        /* Background sync — salva offline se sem conexão */
         if ('serviceWorker' in navigator && 'SyncManager' in window) {
             const reg = await navigator.serviceWorker.ready;
             await reg.sync.register('sync-doses').catch(()=>{});
@@ -1099,8 +1200,8 @@
     };
 
     /* ══════════════════════════════
-       METABOLISMO
-    ══════════════════════════════ */
+        METABOLISMO
+     ══════════════════════════════ */
     function calcularMetabolismo(pesoAtual, perdaSemanalMedia) {
         const altura     = configApp.altura || 170;
         const idade      = configApp.idade  || 30;
@@ -1147,11 +1248,11 @@
     }
 
     /* ══════════════════════════════
-       NOTA DE DESEMPENHO
-    ══════════════════════════════ */
+        NOTA DE DESEMPENHO
+     ══════════════════════════════ */
     const ESCALA_NOTAS = [
         { nota:'S+', min:1.00, max:Infinity, cor:'#10b981', desc:'Excepcional',       detalhe:'Você está no top 5% dos estudos clínicos. Resultado extraordinário!' },
-        { nota:'S',  min:0.75, max:1.00,     cor:'#34d399', desc:'Ótimo',             detalhe:'Acima do top 10% do SURMOUNT. Excelente progresso!' },
+        { nota:'S',  min:0.75, max:1.00,     cor:'#34d399', desc:'Ótimo',              detalhe:'Acima do top 10% do SURMOUNT. Excelente progresso!' },
         { nota:'A',  min:0.55, max:0.75,     cor:'#2dd4bf', desc:'Acima da média',    detalhe:'Você está superando a média dos estudos clínicos. Ótimo trabalho!' },
         { nota:'B',  min:0.35, max:0.55,     cor:'#818cf8', desc:'Na média clínica',  detalhe:'Dentro da faixa esperada do Mounjaro (~0.52 kg/sem no SURMOUNT-1).' },
         { nota:'C',  min:0.20, max:0.35,     cor:'#fbbf24', desc:'Abaixo da média',   detalhe:'Abaixo da média clínica. Revise dieta e exercício com seu médico.' },
@@ -1161,10 +1262,7 @@
     function atualizarNota() {
         const crono = [...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
         if (crono.length < 2 || !configApp.pesoInicial) return;
-        const pesoAtual  = crono[crono.length-1].peso;
-        const semanas    = (new Date(crono[crono.length-1].dataRaw)-new Date(crono[0].dataRaw))/(1000*60*60*24*7);
-        const perdaTotal = configApp.pesoInicial - pesoAtual;
-        const mediaSem   = Math.max(0, semanas > 0 ? perdaTotal/semanas : 0);
+        const mediaSem   = calcularMediaPerdaInteligente(crono);
         const nota       = ESCALA_NOTAS.find(e=>mediaSem>=e.min && mediaSem<e.max) || ESCALA_NOTAS[ESCALA_NOTAS.length-1];
 
         document.getElementById('notaLetra').innerText       = nota.nota;
@@ -1184,8 +1282,65 @@
     }
 
     /* ══════════════════════════════
-       GRÁFICO IMC
-    ══════════════════════════════ */
+        NOVO CÁLCULO INTELIGENTE - NOVO!
+     ══════════════════════════════ */
+    function calcularMediaPerdaInteligente(cronoSorted) {
+        if (cronoSorted.length < 2) return 1.0; // Padrão se sem dados
+
+        const hoje = new Date();
+        const quatroSemanasAtras = new Date(hoje.getTime() - (28 * 24 * 60 * 60 * 1000));
+
+        // Separa dados recentes (últimas 4 semanas) e dados antigos
+        const registrosRecentes = cronoSorted.filter(r => new Date(r.dataRaw + 'T12:00:00') >= quatroSemanasAtras);
+        const registrosAntigos = cronoSorted.filter(r => new Date(r.dataRaw + 'T12:00:00') < quatroSemanasAtras);
+
+        let mediaRecente = 0;
+        let mediaAntiga = 0;
+
+        // 1. Calcula perda recente
+        if (registrosRecentes.length >= 2) {
+            const pesoMaisAntigoRecente = registrosRecentes[0].peso;
+            const pesoMaisAtualRecente = registrosRecentes[registrosRecentes.length - 1].peso;
+            const semanasRecentes = (new Date(registrosRecentes[registrosRecentes.length - 1].dataRaw) - new Date(registrosRecentes[0].dataRaw)) / (1000*60*60*24*7);
+            mediaRecente = semanasRecentes > 0 ? Math.max(0, (pesoMaisAntigoRecente - pesoMaisAtualRecente) / semanasRecentes) : 0;
+        } else if (registrosRecentes.length === 1 && registrosAntigos.length > 0) {
+            // Se tem apenas 1 registro recente, compara com o último antigo
+            const ultimoAntigo = registrosAntigos[registrosAntigos.length - 1];
+            const semanas = (new Date(registrosRecentes[0].dataRaw) - new Date(ultimoAntigo.dataRaw)) / (1000*60*60*24*7);
+            mediaRecente = semanas > 0 ? Math.max(0, (ultimoAntigo.peso - registrosRecentes[0].peso) / semanas) : 0;
+        }
+
+        // 2. Calcula perda antiga
+        if (registrosAntigos.length >= 2) {
+            const pesoMaisAntigo = configApp.pesoInicial || registrosAntigos[0].peso;
+            const pesoMaisAtual = registrosAntigos[registrosAntigos.length - 1].peso;
+            const semanasAntigas = (new Date(registrosAntigos[registrosAntigos.length - 1].dataRaw) - new Date(cronoSorted[0].dataRaw)) / (1000*60*60*24*7);
+            mediaAntiga = semanasAntigas > 0 ? Math.max(0, (pesoMaisAntigo - pesoMaisAtual) / semanasAntigas) : 0;
+        }
+
+        // 3. Ponderação de velocidade (Recente tem 60% de relevância, antiga tem 40%)
+        let mediaFinal = 0;
+        if (mediaRecente > 0 && mediaAntiga > 0) {
+            mediaFinal = (mediaRecente * 0.6) + (mediaAntiga * 0.4);
+        } else if (mediaRecente > 0) {
+            mediaFinal = mediaRecente; // Só tem dados recentes
+        } else if (mediaAntiga > 0) {
+            mediaFinal = mediaAntiga; // Só tem dados antigos
+        } else {
+            // Fallback para média linear pura se o cálculo falhar
+            const pesoInicialRef = configApp.pesoInicial || cronoSorted[0].peso;
+            const pesoAtual = cronoSorted[cronoSorted.length - 1].peso;
+            const semanasTotais = (new Date(cronoSorted[cronoSorted.length - 1].dataRaw) - new Date(cronoSorted[0].dataRaw)) / (1000*60*60*24*7);
+            mediaFinal = semanasTotais > 0 ? (pesoInicialRef - pesoAtual) / semanasTotais : 1.0;
+        }
+
+        // Limita a perda matemática a níveis biologicamente comuns (0.1kg a 2.5kg por semana)
+        return Math.min(Math.max(mediaFinal, 0.10), 2.5);
+    }
+
+    /* ══════════════════════════════
+        GRÁFICO IMC
+     ══════════════════════════════ */
     function calcularIMCValor(peso) {
         const h = (configApp.altura||170)/100;
         return peso/(h*h);
@@ -1239,8 +1394,8 @@
     }
 
     /* ══════════════════════════════
-       CORRELAÇÃO SINTOMAS
-    ══════════════════════════════ */
+        CORRELAÇÃO SINTOMAS
+     ══════════════════════════════ */
     const sintomaScore = { 'Sem Sintomas':0,'Muita Saciedade':1,'Fadiga':2,'Constipação':2,'Náusea Leve':3 };
     const sintomaEmoji = { 'Sem Sintomas':'✅','Muita Saciedade':'😶','Fadiga':'😴','Constipação':'😣','Náusea Leve':'🤢' };
     const sintomaCorMap = {
@@ -1313,8 +1468,8 @@
     }
 
     /* ══════════════════════════════
-       ESTOQUE DE AMPOLAS
-    ══════════════════════════════ */
+        ESTOQUE DE AMPOLAS
+     ══════════════════════════════ */
     function calcularEstoqueAmpolas(cronologico) {
         const total = configApp.ampolas || 1;
         let vials = Array.from({length:total},(_,i)=>({idx:i,mgInicial:15.0,mgRestante:15.0}));
@@ -1363,8 +1518,8 @@
     }
 
     /* ══════════════════════════════
-       LÓGICA PRINCIPAL
-    ══════════════════════════════ */
+        LÓGICA PRINCIPAL
+     ══════════════════════════════ */
     function calcularLogicaPrincipal() {
         const calContainer = document.getElementById('calendarioContainer');
         const boxStatus    = document.getElementById('boxStatusMeta');
@@ -1373,10 +1528,8 @@
         const cronologico=[...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
         if(cronologico.length>0){ dataBase=new Date(cronologico[cronologico.length-1].dataRaw+'T12:00:00'); pesoAtualEvolutivo=cronologico[cronologico.length-1].peso; }
 
-        let mediaPerdaSemanal=1.0;
-        if(cronologico.length>=2&&configApp.pesoInicial){ const sem=(new Date(cronologico[cronologico.length-1].dataRaw)-new Date(cronologico[0].dataRaw))/(1000*60*60*24*7); mediaPerdaSemanal=sem>0?Math.max(0.1,(configApp.pesoInicial-pesoAtualEvolutivo)/sem):1.0; }
-        else if(cronologico.length===1&&configApp.pesoInicial){ mediaPerdaSemanal=Math.max(0.1,configApp.pesoInicial-pesoAtualEvolutivo); }
-        mediaPerdaSemanal=Math.min(mediaPerdaSemanal,2.5);
+        // Nova inteligência de cálculo de peso integrada!
+        let mediaPerdaSemanal = calcularMediaPerdaInteligente(cronologico);
 
         document.getElementById('lblTotalEliminado').innerText=`-${(configApp.pesoInicial?(configApp.pesoInicial-pesoAtualEvolutivo):0).toFixed(1)} kg`;
         document.getElementById('lblMediaSemanal').innerText=`${mediaPerdaSemanal.toFixed(2)} kg/sem`;
@@ -1457,8 +1610,8 @@
     }
 
     /* ══════════════════════════════
-       PROGRESSO DE META
-    ══════════════════════════════ */
+        PROGRESSO DE META
+     ══════════════════════════════ */
     function atualizarProgressoMeta() {
         const card=document.getElementById('cardMetaProgresso');
         if(!configApp.pesoMeta||registros.length===0||!configApp.pesoInicial){ card.classList.add('hidden'); return; }
@@ -1485,15 +1638,14 @@
         document.getElementById('anelMeta').style.strokeDashoffset=201-(pct/100)*201;
         const boxEst=document.getElementById('boxEstimativaMeta'),txtEst=document.getElementById('txtEstimativaMeta');
         if(!metaAtingida&&crono.length>=2){
-            const sem=(new Date(crono[crono.length-1].dataRaw)-new Date(crono[0].dataRaw))/(1000*60*60*24*7);
-            const media=sem>0?jaPerdido/sem:1;
+            const media = calcularMediaPerdaInteligente(crono);
             if(media>0){ const semsRest=Math.ceil(faltaPerder/media),dataEst=new Date(); dataEst.setDate(dataEst.getDate()+semsRest*7); const m=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']; txtEst.innerText=`Estimativa: ${dataEst.getDate()} de ${m[dataEst.getMonth()]} de ${dataEst.getFullYear()} (${semsRest} sem)`; boxEst.classList.remove('hidden'); }
         } else { boxEst.classList.add('hidden'); }
     }
 
     /* ══════════════════════════════
-       GRÁFICO DE PESO
-    ══════════════════════════════ */
+        GRÁFICO DE PESO
+     ══════════════════════════════ */
     function atualizarGrafico() {
         const ctx=document.getElementById('graficoPeso').getContext('2d');
         const real=[...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
@@ -1514,8 +1666,8 @@
     }
 
     /* ══════════════════════════════
-       LISTA DE REGISTROS
-    ══════════════════════════════ */
+        LISTA DE REGISTROS
+     ══════════════════════════════ */
     function renderizarLista() {
         const listaHtml=document.getElementById('listaRegistros'); listaHtml.innerHTML='';
         const sintomaConfig={'Sem Sintomas':{cor:'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',icone:'✅'},'Náusea Leve':{cor:'text-amber-400 bg-amber-500/10 border-amber-500/20',icone:'🤢'},'Muita Saciedade':{cor:'text-blue-400 bg-blue-500/10 border-blue-500/20',icone:'😶'},'Constipação':{cor:'text-orange-400 bg-orange-500/10 border-orange-500/20',icone:'😣'},'Fadiga':{cor:'text-violet-400 bg-violet-500/10 border-violet-500/20',icone:'😴'}};
@@ -1538,20 +1690,20 @@
     }
 
     /* ══════════════════════════════
-       RESET
-    ══════════════════════════════ */
+        RESET
+     ══════════════════════════════ */
     window.limparTudo = async function() {
         if(confirm('Apagar todo o histórico da nuvem?')){
             registros=[];
-            configApp={pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,aguaLog:{},notifDose:true,notifAgua:true};
+            configApp={pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,aguaLog:{},notifDose:true,notifAgua:true,tutorialConcluido:false};
             await setDoc(doc(db,"usuarios",usuarioAtual.uid),{registros,configApp});
             toggleConfigModal(); atualizarTudo();
         }
     };
 
     /* ══════════════════════════════
-       ORQUESTRADOR
-    ══════════════════════════════ */
+        ORQUESTRADOR
+     ══════════════════════════════ */
     function atualizarTudo() {
         renderizarLista();
         calcularLogicaPrincipal();
