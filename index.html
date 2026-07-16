@@ -85,40 +85,53 @@
 </section>
 
 <!-- ══════════════════════════════════════════
-     MODAL DE TUTORIAL (ONBOARDING) - NOVO!
+     MODAL DE TUTORIAL (ONBOARDING)
 ═══════════════════════════════════════════ -->
-<section id="modalTutorial" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center px-4 hidden">
-    <div class="bg-slate-850 border border-slate-700 p-6 rounded-3xl max-w-sm w-full space-y-6 shadow-2xl relative">
+<section id="modalTutorial" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center px-4 hidden">
+    <div class="bg-slate-850 border border-slate-700 p-6 rounded-3xl max-w-md w-full space-y-5 shadow-2xl relative">
         <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-            <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Tutorial de Início</span>
+            <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Passo a Passo de Configuração</span>
             <span id="tutorialPassoIndice" class="text-xs text-slate-500 font-mono">Passo 1 de 4</span>
         </div>
 
         <!-- Conteúdo dos Passos -->
-        <div id="tutorialConteudo" class="min-h-[220px] flex flex-col justify-center space-y-4">
+        <div id="tutorialConteudo" class="min-h-[260px] flex flex-col justify-center space-y-4">
             <!-- Passo 1 -->
             <div id="passo1" class="space-y-3">
-                <div class="text-3xl text-center">🎯</div>
-                <h3 class="text-base font-bold text-white text-center">Bem-vindo ao Mounjaro Journey!</h3>
-                <p class="text-xs text-slate-300 text-center leading-relaxed">Este app foi desenhado para acompanhar de perto cada etapa da sua jornada. Aqui você monitora suas doses, perda de peso, sintomas e estoque em tempo real.</p>
+                <div class="text-3xl text-center">⚙️</div>
+                <h3 class="text-base font-bold text-white text-center">Seus Dados de Perfil</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">Primeiro, acesse <strong>Ajustes</strong> no topo da tela. Lá você irá definir:</p>
+                <ul class="text-[11px] text-slate-400 space-y-1.5 max-w-xs mx-auto list-disc pl-4">
+                    <li><strong class="text-slate-200">Idade (anos):</strong> Importante para calcular seu gasto calórico real.</li>
+                    <li><strong class="text-slate-200">Altura (cm):</strong> Usada para calcular seu IMC ideal personalizado.</li>
+                    <li><strong class="text-slate-200">Sexo Biológico:</strong> Homens e mulheres têm limites e alvos de IMC ideais clinicamente diferentes no app.</li>
+                </ul>
             </div>
             <!-- Passo 2 -->
             <div id="passo2" class="space-y-3 hidden">
-                <div class="text-3xl text-center">💉</div>
-                <h3 class="text-base font-bold text-white text-center">Controle Visual de Estoque</h3>
-                <p class="text-xs text-slate-300 text-center leading-relaxed">Você lança a quantidade total de ampolas de 15mg que possui. O app calcula o rendimento exato baseado na sua dose alvo (ex: 2.5mg ou 5mg) e te avisa quando o estoque estiver chegando ao fim.</p>
+                <div class="text-3xl text-center">🎯</div>
+                <h3 class="text-base font-bold text-white text-center">Seu Peso e Sua Meta</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">Ainda na tela de <strong>Ajustes</strong>, você deve informar os alvos do seu tratamento:</p>
+                <ul class="text-[11px] text-slate-400 space-y-1.5 max-w-xs mx-auto list-disc pl-4">
+                    <li><strong class="text-slate-200">Peso Inicial Histórico:</strong> Seu peso no primeiríssimo dia de tratamento.</li>
+                    <li><strong class="text-slate-200">Meta Alvo Final:</strong> O peso ideal que você deseja alcançar com o tratamento.</li>
+                </ul>
             </div>
             <!-- Passo 3 -->
             <div id="passo3" class="space-y-3 hidden">
-                <div class="text-3xl text-center">📉</div>
-                <h3 class="text-base font-bold text-white text-center">Projeções de Peso Inteligentes</h3>
-                <p class="text-xs text-slate-300 text-center leading-relaxed">Nossos algoritmos analisam seu histórico recente. Se o ritmo de perda de peso diminuir (platô), a inteligência do app recalcula as datas previstas para atingir suas metas de forma realista.</p>
+                <div class="text-3xl text-center">🧪</div>
+                <h3 class="text-base font-bold text-white text-center">Estoque e Doses Antigas</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">Configure as regras e o seu histórico de aplicação:</p>
+                <ul class="text-[11px] text-slate-400 space-y-1.5 max-w-xs mx-auto list-disc pl-4">
+                    <li><strong class="text-slate-200">Dose Alvo e Ampolas Totais:</strong> Informe quantas ampolas de 15mg você comprou para prever o término do estoque físico.</li>
+                    <li><strong class="text-slate-200">Lançar Dose Antiga:</strong> Já começou o tratamento antes de usar o app? Use essa área para inserir a data e o peso das aplicações passadas para não distorcer os gráficos.</li>
+                </ul>
             </div>
             <!-- Passo 4 -->
             <div id="passo4" class="space-y-3 hidden">
-                <div class="text-3xl text-center">⚙️</div>
-                <h3 class="text-base font-bold text-white text-center">Configuração Inicial Obrigatória</h3>
-                <p class="text-xs text-slate-300 text-center leading-relaxed">Para começar, clique no botão abaixo para preencher seu peso atual, altura e meta. Sem esses parâmetros, as previsões matemáticas não serão exibidas.</p>
+                <div class="text-3xl text-center">📈</div>
+                <h3 class="text-base font-bold text-white text-center">Cálculo de Perda Inteligente</h3>
+                <p class="text-xs text-slate-300 text-center leading-relaxed">Com os dados preenchidos, o app passa a analisar seu progresso. Se você perder 1kg no primeiro mês e 500g no segundo, o algoritmo ajustará dinamicamente as previsões de data-alvo, refletindo seu ritmo metabólico atual.</p>
             </div>
         </div>
 
@@ -290,14 +303,8 @@
                     <input type="number" step="0.1" id="inputPesoRapido"
                         class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-center text-lg font-bold text-white outline-none focus:border-emerald-400">
                 </div>
-                <select id="inputSintomaRapido"
-                    class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white outline-none">
-                    <option value="Sem Sintomas">Sem Sintomas</option>
-                    <option value="Náusea Leve">Náusea Leve</option>
-                    <option value="Muita Saciedade">Muita Saciedade</option>
-                    <option value="Constipação">Constipação</option>
-                    <option value="Fadiga">Fadiga</option>
-                </select>
+                <!-- Sintoma oculto por segurança para não quebrar a estrutura de dados existente -->
+                <input type="hidden" id="inputSintomaRapido" value="Sem Sintomas">
                 <div class="grid grid-cols-2 gap-2 pt-1">
                     <button onclick="fecharModalRapido()" class="py-2.5 bg-slate-700 text-slate-300 rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
                     <button onclick="confirmarInjecaoRapida()" class="py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 rounded-xl text-xs font-black shadow-lg cursor-pointer">Salvar</button>
@@ -346,111 +353,6 @@
             <div id="containerProjecaoVials" class="space-y-1.5"></div>
             <div id="boxStatusMeta" class="p-2.5 rounded-xl text-[11px] border flex items-center gap-2 bg-slate-900/40 border-slate-700"></div>
             <div id="boxAlertaClinico" class="p-2.5 rounded-xl text-[11px] border flex items-center gap-2 bg-amber-500/10 border-amber-500/20 text-amber-400 hidden"></div>
-        </section>
-
-        <!-- ══════════════════════════════
-             HIDRATAÇÃO
-        ══════════════════════════════ -->
-        <section class="bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-2xl border border-blue-500/15 shadow-xl space-y-3">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h3 class="text-sm font-semibold text-blue-400 uppercase tracking-wider">💧 Hidratação</h3>
-                    <p class="text-[10px] text-slate-500 mt-0.5">Meta baseada no seu peso atual</p>
-                </div>
-                <button onclick="resetarAguaManual()" class="text-[10px] bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700 text-slate-400 active:bg-slate-950 cursor-pointer">Zerar dia</button>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="relative flex-shrink-0 w-20 h-20">
-                    <svg viewBox="0 0 80 80" class="w-full h-full -rotate-90">
-                        <circle cx="40" cy="40" r="32" fill="none" stroke="#0f172a" stroke-width="7"/>
-                        <circle id="anelAgua" cx="40" cy="40" r="32" fill="none" stroke="url(#gradAgua)" stroke-width="7" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201" style="transition: stroke-dashoffset 0.5s ease"/>
-                        <defs><linearGradient id="gradAgua" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs>
-                    </svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span id="lblPorcentagemAgua" class="text-base font-black text-white leading-none">0%</span>
-                        <span class="text-[8px] text-slate-400 mt-0.5">do dia</span>
-                    </div>
-                </div>
-                <div class="flex-1 space-y-2">
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="bg-slate-900/70 rounded-xl p-2 border border-slate-800 text-center">
-                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Meta</span>
-                            <span id="lblMetaAguaCalculada" class="text-sm font-black text-white">--</span>
-                        </div>
-                        <div class="bg-blue-950/40 rounded-xl p-2 border border-blue-800/30 text-center">
-                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Falta</span>
-                            <span id="lblMetaAguaRestante" class="text-sm font-black text-blue-300">--</span>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/50 rounded-xl px-3 py-1.5 border border-slate-800 flex justify-between items-center">
-                        <span class="text-[10px] text-slate-400">Ingerido hoje</span>
-                        <span id="lblAguaTomadaAcumulada" class="text-[11px] font-black text-cyan-300">0 ml</span>
-                    </div>
-                </div>
-            </div>
-            <div class="space-y-1.5">
-                <div class="relative w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800/80">
-                    <div id="barraAguaProgresso" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full w-0 transition-all duration-500 rounded-full"></div>
-                    <div class="absolute top-0 h-full w-px bg-slate-700/60" style="left:25%"></div>
-                    <div class="absolute top-0 h-full w-px bg-slate-700/60" style="left:50%"></div>
-                    <div class="absolute top-0 h-full w-px bg-slate-700/60" style="left:75%"></div>
-                </div>
-                <div class="flex justify-between text-[9px] text-slate-600 font-bold px-0.5">
-                    <span>0</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
-                </div>
-            </div>
-            <div class="grid grid-cols-4 gap-2">
-                <button onclick="adicionarAgua(150)" class="py-2.5 bg-blue-600/10 border border-blue-500/20 rounded-xl text-[11px] font-bold text-blue-300 active:scale-95 transition-all cursor-pointer">150ml</button>
-                <button onclick="adicionarAgua(250)" class="py-2.5 bg-blue-600/15 border border-blue-500/25 rounded-xl text-[11px] font-bold text-blue-300 active:scale-95 transition-all cursor-pointer">250ml</button>
-                <button onclick="adicionarAgua(350)" class="py-2.5 bg-blue-600/20 border border-blue-500/35 rounded-xl text-[11px] font-bold text-blue-200 active:scale-95 transition-all cursor-pointer">350ml</button>
-                <button onclick="adicionarAgua(500)" class="py-2.5 bg-blue-600/25 border border-blue-500/45 rounded-xl text-[11px] font-bold text-blue-200 active:scale-95 transition-all cursor-pointer">500ml</button>
-            </div>
-            <div id="boxStatusAgua" class="hidden items-center gap-2 justify-center bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-2 text-[11px] font-bold text-emerald-300">
-                🎉 Meta de hidratação atingida!
-            </div>
-        </section>
-
-        <!-- ══════════════════════════════
-             NOTIFICAÇÕES
-        ══════════════════════════════ -->
-        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/60 space-y-3">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">🔔</span>
-                    <div>
-                        <h3 class="text-sm font-bold text-white">Notificações</h3>
-                        <p class="text-[10px] text-slate-400">Dose e hidratação</p>
-                    </div>
-                </div>
-                <button onclick="solicitarPermissaoNotif()" id="btnAtivNotif"
-                    class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold cursor-pointer active:opacity-90">
-                    Ativar
-                </button>
-            </div>
-            <div id="notifStatus" class="text-[10px] text-slate-500 bg-slate-900/50 rounded-xl px-3 py-2 border border-slate-800">
-                Verificando...
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <div class="flex items-center justify-between bg-slate-900/50 rounded-xl px-3 py-2 border border-slate-800">
-                    <span class="text-[10px] text-slate-300 font-semibold">💉 Dose</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggleNotifDose" class="sr-only peer" checked onchange="salvarPrefNotif()">
-                        <div class="w-8 h-4 bg-slate-700 peer-checked:bg-indigo-600 rounded-full transition-colors"></div>
-                        <div class="absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform peer-checked:translate-x-4 shadow"></div>
-                    </label>
-                </div>
-                <div class="flex items-center justify-between bg-slate-900/50 rounded-xl px-3 py-2 border border-slate-800">
-                    <span class="text-[10px] text-slate-300 font-semibold">💧 Água (18h)</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggleNotifAgua" class="sr-only peer" checked onchange="salvarPrefNotif()">
-                        <div class="w-8 h-4 bg-slate-700 peer-checked:bg-blue-600 rounded-full transition-colors"></div>
-                        <div class="absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform peer-checked:translate-x-4 shadow"></div>
-                    </label>
-                </div>
-            </div>
-            <button onclick="testarNotificacao()" class="w-full py-2 bg-slate-700 border border-slate-600 rounded-xl text-xs font-semibold text-slate-300 cursor-pointer active:opacity-90">
-                Enviar notificação de teste
-            </button>
         </section>
 
         <!-- ══════════════════════════════
@@ -514,7 +416,7 @@
                     <div id="marcadorIMC" class="absolute top-0 h-full w-1 bg-white rounded-full shadow-md transition-all duration-700" style="left:0%"></div>
                 </div>
                 <div class="flex justify-between text-[8px] text-slate-500 mt-0.5 font-bold">
-                    <span>16</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
+                    <span>16</span><span>18.5</span><span id="imcAvaliacaoIdealMarcador">25</span><span>30</span><span>40</span>
                 </div>
                 <div class="text-[9px] text-center font-bold mt-1" id="lblClasseIMC">--</div>
             </div>
@@ -590,59 +492,6 @@
                 </div>
             </div>
             <div id="calendarioContainer" class="flex gap-2.5 overflow-x-auto pb-2 pt-0.5 snap-x snap-mandatory" style="-webkit-overflow-scrolling: touch; scrollbar-width: none;"></div>
-        </section>
-
-        <!-- ══════════════════════════════
-             GRÁFICO IMC
-        ══════════════════════════════ -->
-        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
-            <div class="flex justify-between items-center">
-                <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider">📊 Evolução do IMC</h2>
-                <div class="text-right">
-                    <span id="imcAtualLabel" class="text-base font-black text-white">--</span>
-                    <span id="imcClasseLabel" class="text-[10px] font-bold text-emerald-400 block">--</span>
-                </div>
-            </div>
-            <div class="flex gap-1.5 flex-wrap">
-                <span class="text-[9px] px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300 font-bold">Abaixo &lt;18.5</span>
-                <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold">Normal 18.5–25</span>
-                <span class="text-[9px] px-2 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 font-bold">Sobrepeso 25–30</span>
-                <span class="text-[9px] px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 font-bold">Obeso &gt;30</span>
-            </div>
-            <div style="height: 180px;"><canvas id="graficoIMC"></canvas></div>
-        </section>
-
-        <!-- ══════════════════════════════
-             SINTOMAS × DIA PÓS-DOSE
-        ══════════════════════════════ -->
-        <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
-            <div class="flex items-center gap-2">
-                <span>🔬</span>
-                <div>
-                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider">Padrão de Sintomas</h2>
-                    <p class="text-[10px] text-slate-400">Correlação com o dia após a dose</p>
-                </div>
-            </div>
-            <div class="flex gap-1 overflow-x-auto pb-1" id="tabsSintoma">
-                <button onclick="mostrarDiaSintoma(1)" data-dia="1" class="tab-btn active flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+1</button>
-                <button onclick="mostrarDiaSintoma(2)" data-dia="2" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+2</button>
-                <button onclick="mostrarDiaSintoma(3)" data-dia="3" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+3</button>
-                <button onclick="mostrarDiaSintoma(4)" data-dia="4" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+4</button>
-                <button onclick="mostrarDiaSintoma(5)" data-dia="5" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+5</button>
-                <button onclick="mostrarDiaSintoma(6)" data-dia="6" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+6</button>
-                <button onclick="mostrarDiaSintoma(7)" data-dia="7" class="tab-btn flex-shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 cursor-pointer transition-all">D+7</button>
-            </div>
-            <div id="painelSintoma" class="space-y-2 min-h-[40px]"></div>
-            <div id="insightSintoma" class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3 py-2.5 text-xs text-indigo-300 hidden">
-                <span class="font-bold">💡 Insight: </span><span id="txtInsight"></span>
-            </div>
-            <div class="bg-slate-900/50 rounded-xl p-2.5 border border-slate-800">
-                <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-2">Mapa de Intensidade Semanal</p>
-                <div id="mapaCalor" class="grid grid-cols-7 gap-1"></div>
-                <div class="flex justify-between mt-1 text-[8px] text-slate-600 font-bold px-0.5">
-                    <span>D+1</span><span>D+2</span><span>D+3</span><span>D+4</span><span>D+5</span><span>D+6</span><span>D+7</span>
-                </div>
-            </div>
         </section>
 
         <!-- ══════════════════════════════
@@ -752,13 +601,12 @@
     let registros    = [];
     let configApp    = {
         pesoInicial: null, pesoMeta: null, ampolas: 1, doseAlvo: 2.5,
-        altura: null, idade: null, sexo: 'M', atividade: 1.2, aguaLog: {},
-        notifDose: true, notifAgua: true, tutorialConcluido: false
+        altura: null, idade: null, sexo: 'M', atividade: 1.2,
+        tutorialConcluido: false
     };
     let chartInstance   = null;
     let chartIMC        = null;
     let doseParaSalvar  = null;
-    let dadosCorrelacao = {};
     let listaProjecaoPontos = [];
     let passoTutorialAtual = 1;
 
@@ -781,39 +629,6 @@
         try {
             const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
             console.log('[App] SW registrado:', reg.scope);
-
-            /* Periodic Background Sync */
-            if ('periodicSync' in reg) {
-                const status = await navigator.permissions.query({ name: 'periodic-background-sync' });
-                if (status.state === 'granted') {
-                    await reg.periodicSync.register('verificar-lembretes-diarios', { minInterval: 24 * 60 * 60 * 1000 });
-                }
-            }
-
-            /* Mensagens do SW → App */
-            navigator.serviceWorker.addEventListener('message', event => {
-                const { tipo, pendentes, ml } = event.data || {};
-                if (tipo === 'SYNC_PENDENTES' && pendentes?.length) {
-                    pendentes.forEach(d => registros.push(d));
-                    salvarDadosNuvem().then(() => atualizarTudo());
-                    mostrarToast(`✅ ${pendentes.length} dose(s) sincronizada(s)!`);
-                }
-                if (tipo === 'ADICIONAR_AGUA' && ml) {
-                    adicionarAgua(ml);
-                }
-                if (tipo === 'ABRIR_MODAL_DOSE') {
-                    const cal = document.getElementById('calendarioContainer');
-                    const btn = cal?.querySelector('button');
-                    if (btn) btn.click();
-                }
-            });
-
-            /* Ações do parâmetro URL ao abrir via notificação */
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('acao') === 'agua') {
-                const ml = parseInt(urlParams.get('ml')) || 500;
-                setTimeout(() => adicionarAgua(ml), 800);
-            }
         } catch (err) {
             console.error('[App] Erro ao registrar SW:', err);
         }
@@ -831,109 +646,6 @@
     }
 
     /* ══════════════════════════════
-        NOTIFICAÇÕES
-     ══════════════════════════════ */
-    function verificarStatusNotificacoes() {
-        const statusEl = document.getElementById('notifStatus');
-        const btnAtiv  = document.getElementById('btnAtivNotif');
-        if (!('Notification' in window)) {
-            statusEl.innerText = '❌ Navegador não suporta notificações.';
-            btnAtiv.disabled   = true; return;
-        }
-        const p = Notification.permission;
-        if (p === 'granted') {
-            statusEl.innerHTML = '✅ <span style="color:#34d399;font-weight:700">Notificações ativas!</span>';
-            btnAtiv.innerText  = 'Reativar';
-        } else if (p === 'denied') {
-            statusEl.innerText = '🚫 Bloqueado nas configurações do navegador.';
-            btnAtiv.innerText  = 'Bloqueado';
-            btnAtiv.disabled   = true;
-        } else {
-            statusEl.innerText = '⏳ Clique em "Ativar" para receber lembretes.';
-        }
-    }
-
-    window.solicitarPermissaoNotif = async function() {
-        if (!('Notification' in window)) return;
-        const perm = await Notification.requestPermission();
-        verificarStatusNotificacoes();
-        if (perm === 'granted') {
-            mostrarToast('🔔 Notificações ativadas!');
-            sincronizarConfigComSW();
-        }
-    };
-
-    window.testarNotificacao = function() {
-        if (Notification.permission !== 'granted') { alert('Ative as notificações primeiro.'); return; }
-        new Notification('💉 Mounjaro Tracker', {
-            body:    'Lembrete: Amanhã é dia da sua próxima dose! Separe a seringa.',
-            icon:    '/icons/icon-192.png',
-            tag:     'dose-teste',
-            renotify: true,
-            vibrate: [200,100,200]
-        });
-        setTimeout(() => new Notification('💧 Hidratação', {
-            body:  'Você ainda não atingiu sua meta de hidratação hoje!',
-            icon:  '/icons/icon-192.png',
-            tag:   'agua-teste'
-        }), 1500);
-    };
-
-    window.salvarPrefNotif = function() {
-        configApp.notifDose = document.getElementById('toggleNotifDose').checked;
-        configApp.notifAgua = document.getElementById('toggleNotifAgua').checked;
-        salvarDadosNuvem();
-        sincronizarConfigComSW();
-    };
-
-    /* Envia config atualizada para o SW via postMessage */
-    function sincronizarConfigComSW() {
-        if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
-        const crono      = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
-        const pesoAtual  = crono.length > 0 ? crono[crono.length-1].peso : (configApp.pesoInicial || 80);
-        const ultima     = crono.length > 0 ? new Date(crono[crono.length-1].dataRaw + 'T12:00:00') : new Date();
-        const proxDose   = new Date(ultima.getTime() + 7*24*60*60*1000);
-        navigator.serviceWorker.controller.postMessage({
-            tipo: 'ATUALIZAR_CONFIG',
-            dados: {
-                notifDose:      configApp.notifDose !== false,
-                notifAgua:      configApp.notifAgua !== false,
-                doseAlvo:       configApp.doseAlvo,
-                proximaDoseISO: proxDose.toISOString(),
-                pesoAtual,
-                aguaLog:        configApp.aguaLog || {}
-            }
-        });
-    }
-
-    /* Verifica lembrete de água às 18h (enquanto app estiver aberto) */
-    function agendarVerificacaoAgua() {
-        const agora  = new Date();
-        const hora18 = new Date(); hora18.setHours(18,0,0,0);
-        let diff = hora18 - agora;
-        if (diff < 0) diff += 24*60*60*1000;
-        setTimeout(() => {
-            if (Notification.permission !== 'granted') return;
-            if (!configApp.notifAgua) return;
-            const hoje    = obterChaveDataHoje();
-            const tomado  = configApp.aguaLog?.[hoje] || 0;
-            const crono   = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
-            const pesoRef = crono.length > 0 ? crono[crono.length-1].peso : (configApp.pesoInicial || 80);
-            const meta    = Math.round(pesoRef * 35);
-            if (tomado < meta) {
-                new Notification('💧 Meta de hidratação!', {
-                    body:    `Faltam ${((meta-tomado)/1000).toFixed(1)}L para atingir sua meta hoje!`,
-                    icon:    '/icons/icon-192.png',
-                    tag:     'agua-18h',
-                    renotify: true
-                });
-            }
-            agendarVerificacaoAgua();
-        }, diff);
-    }
-    agendarVerificacaoAgua();
-
-    /* ══════════════════════════════
         AUTH
      ══════════════════════════════ */
     onAuthStateChanged(auth, async (user) => {
@@ -943,9 +655,6 @@
             document.getElementById('conteudoApp').classList.remove('hidden');
             document.getElementById('lblUserEmail').innerText = user.email;
             await carregarDadosNuvem();
-            verificarStatusNotificacoes();
-            document.getElementById('toggleNotifDose').checked = configApp.notifDose !== false;
-            document.getElementById('toggleNotifAgua').checked = configApp.notifAgua !== false;
         } else {
             usuarioAtual = null;
             document.getElementById('telaLogin').classList.remove('hidden');
@@ -976,21 +685,18 @@
             if (docSnap.exists()) {
                 const dados = docSnap.data();
                 registros = dados.registros || [];
-                configApp = { pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,aguaLog:{},notifDose:true,notifAgua:true,tutorialConcluido:false, ...dados.configApp };
-                if (!configApp.aguaLog)   configApp.aguaLog   = {};
+                configApp = { pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,tutorialConcluido:false, ...dados.configApp };
                 if (!configApp.sexo)      configApp.sexo      = 'M';
                 if (!configApp.atividade) configApp.atividade = 1.2;
             } else {
                 await salvarDadosNuvem();
             }
 
-            // Exibir tutorial para novos usuários (ou quem não concluiu ainda)
             if (!configApp.tutorialConcluido) {
                 mostrarTutorial();
             } else {
                 atualizarTudo();
             }
-            sincronizarConfigComSW();
         } catch(err) { console.error(err); }
     }
 
@@ -1001,13 +707,12 @@
         _salvarTimer = setTimeout(async () => {
             try {
                 await setDoc(doc(db,"usuarios",usuarioAtual.uid), { registros, configApp });
-                sincronizarConfigComSW();
             } catch(err) { alert("Erro ao salvar: " + err.message); }
         }, 600);
     }
 
     /* ══════════════════════════════
-        TUTORIAL (ONBOARDING) - NOVO!
+        TUTORIAL (ONBOARDING)
      ══════════════════════════════ */
     function mostrarTutorial() {
         passoTutorialAtual = 1;
@@ -1028,20 +733,17 @@
     function renderizarPassoTutorial() {
         document.getElementById('tutorialPassoIndice').innerText = `Passo ${passoTutorialAtual} de 4`;
         
-        // Oculta todos
         document.getElementById('passo1').classList.add('hidden');
         document.getElementById('passo2').classList.add('hidden');
         document.getElementById('passo3').classList.add('hidden');
         document.getElementById('passo4').classList.add('hidden');
 
-        // Mostra o atual
         document.getElementById(`passo${passoTutorialAtual}`).classList.remove('hidden');
 
-        // Configura os botões
         document.getElementById('btnTutorialVoltar').disabled = (passoTutorialAtual === 1);
         const btnAvancar = document.getElementById('btnTutorialAvancar');
         if (passoTutorialAtual === 4) {
-            btnAvancar.innerText = "Começar Já! ⚙️";
+            btnAvancar.innerText = "Configurar Dados ⚙️";
             btnAvancar.className = "px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black cursor-pointer shadow-lg shadow-emerald-900/30";
         } else {
             btnAvancar.innerText = "Próximo";
@@ -1054,7 +756,6 @@
         configApp.tutorialConcluido = true;
         await salvarDadosNuvem();
         atualizarTudo();
-        // Abre as configurações automaticamente para o usuário digitar os dados iniciais obrigatórios
         toggleConfigModal();
     }
 
@@ -1094,48 +795,6 @@
             atualizarTudo();
         }
     };
-
-    /* ══════════════════════════════
-        ÁGUA
-     ══════════════════════════════ */
-    function obterChaveDataHoje() {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-    window.adicionarAgua = async function(ml) {
-        const hoje = obterChaveDataHoje();
-        if (!configApp.aguaLog) configApp.aguaLog = {};
-        configApp.aguaLog[hoje] = (configApp.aguaLog[hoje] || 0) + ml;
-        await salvarDadosNuvem();
-        processarPainelAgua();
-    };
-    window.resetarAguaManual = async function() {
-        const hoje = obterChaveDataHoje();
-        if (!configApp.aguaLog) configApp.aguaLog = {};
-        configApp.aguaLog[hoje] = 0;
-        await salvarDadosNuvem();
-        processarPainelAgua();
-    };
-    function processarPainelAgua() {
-        const crono   = [...registros].sort((a,b) => new Date(a.dataRaw)-new Date(b.dataRaw));
-        let pesoRef   = configApp.pesoInicial || 80;
-        if (crono.length > 0) pesoRef = crono[crono.length-1].peso;
-        const metaMl   = Math.round(pesoRef * 35);
-        const hoje     = obterChaveDataHoje();
-        const tomado   = configApp.aguaLog ? (configApp.aguaLog[hoje] || 0) : 0;
-        const restante = Math.max(0, metaMl - tomado);
-        const atingida = tomado >= metaMl;
-        const pct      = Math.min(100, Math.round((tomado / metaMl) * 100)) || 0;
-        document.getElementById('lblMetaAguaCalculada').innerText   = `${(metaMl/1000).toFixed(2)} L`;
-        document.getElementById('lblMetaAguaRestante').innerText    = atingida ? '0 L ✅' : `${(restante/1000).toFixed(2)} L`;
-        document.getElementById('lblAguaTomadaAcumulada').innerText = `${tomado} ml`;
-        document.getElementById('barraAguaProgresso').style.width   = `${pct}%`;
-        document.getElementById('lblPorcentagemAgua').innerText     = `${pct}%`;
-        const anel = document.getElementById('anelAgua');
-        if (anel) anel.style.strokeDashoffset = 201 - (pct/100)*201;
-        const box = document.getElementById('boxStatusAgua');
-        atingida ? (box.classList.remove('hidden'),box.classList.add('flex')) : (box.classList.add('hidden'),box.classList.remove('flex'));
-    }
 
     /* ══════════════════════════════
         DOSE HISTÓRICA
@@ -1193,14 +852,10 @@
         await salvarDadosNuvem();
         atualizarTudo();
         mostrarToast('💉 Dose registrada!');
-        if ('serviceWorker' in navigator && 'SyncManager' in window) {
-            const reg = await navigator.serviceWorker.ready;
-            await reg.sync.register('sync-doses').catch(()=>{});
-        }
     };
 
     /* ══════════════════════════════
-        METABOLISMO
+        METABOLISMO E IMC POR SEXO
      ══════════════════════════════ */
     function calcularMetabolismo(pesoAtual, perdaSemanalMedia) {
         const altura     = configApp.altura || 170;
@@ -1215,6 +870,10 @@
         const proteina   = Math.round(pesoAtual * (sexo === 'F' ? 1.6 : 1.8));
         const alturaM    = altura / 100;
         const imc        = pesoAtual / (alturaM*alturaM);
+
+        // Limites de IMC Ideais Diferenciados por Sexo Clínico
+        const imcIdealMax = sexo === 'F' ? 24.4 : 24.9;
+        document.getElementById('imcAvaliacaoIdealMarcador').innerText = imcIdealMax;
 
         document.getElementById('nutriProteina').innerText      = `${proteina}g`;
         document.getElementById('nutriTMB').innerText           = `${Math.round(tmb)} kcal`;
@@ -1233,7 +892,23 @@
         if (configApp.altura) {
             document.getElementById('boxIMC').classList.remove('hidden');
             document.getElementById('lblIMCValor').innerText = imc.toFixed(1);
-            const cl = imc<18.5?{txt:'Abaixo do peso',cor:'text-blue-400'}:imc<25?{txt:'Peso normal ✅',cor:'text-emerald-400'}:imc<30?{txt:'Sobrepeso',cor:'text-yellow-400'}:imc<35?{txt:'Obesidade G.I',cor:'text-orange-400'}:imc<40?{txt:'Obesidade G.II',cor:'text-rose-400'}:{txt:'Obesidade G.III',cor:'text-red-600'};
+            
+            // Classificação dinâmica do IMC baseada nos limites de sexo
+            let cl = { txt: 'Desconhecido', cor: 'text-slate-400' };
+            if (imc < 18.5) {
+                cl = { txt: 'Abaixo do peso', cor: 'text-blue-400' };
+            } else if (imc <= imcIdealMax) {
+                cl = { txt: 'Peso ideal ✅', cor: 'text-emerald-400' };
+            } else if (imc < 30) {
+                cl = { txt: 'Sobrepeso', cor: 'text-yellow-400' };
+            } else if (imc < 35) {
+                cl = { txt: 'Obesidade Grau I', cor: 'text-orange-400' };
+            } else if (imc < 40) {
+                cl = { txt: 'Obesidade Grau II', cor: 'text-rose-400' };
+            } else {
+                cl = { txt: 'Obesidade Grau III', cor: 'text-red-600' };
+            }
+            
             const lblC = document.getElementById('lblClasseIMC');
             lblC.innerText = cl.txt; lblC.className = `text-[9px] text-center font-bold mt-1 ${cl.cor}`;
             const pos = Math.min(100,Math.max(0,((imc-16)/(40-16))*100));
@@ -1282,35 +957,31 @@
     }
 
     /* ══════════════════════════════
-        NOVO CÁLCULO INTELIGENTE - NOVO!
+        CÁLCULO INTELIGENTE DE PESO
      ══════════════════════════════ */
     function calcularMediaPerdaInteligente(cronoSorted) {
-        if (cronoSorted.length < 2) return 1.0; // Padrão se sem dados
+        if (cronoSorted.length < 2) return 1.0;
 
         const hoje = new Date();
         const quatroSemanasAtras = new Date(hoje.getTime() - (28 * 24 * 60 * 60 * 1000));
 
-        // Separa dados recentes (últimas 4 semanas) e dados antigos
         const registrosRecentes = cronoSorted.filter(r => new Date(r.dataRaw + 'T12:00:00') >= quatroSemanasAtras);
         const registrosAntigos = cronoSorted.filter(r => new Date(r.dataRaw + 'T12:00:00') < quatroSemanasAtras);
 
         let mediaRecente = 0;
         let mediaAntiga = 0;
 
-        // 1. Calcula perda recente
         if (registrosRecentes.length >= 2) {
             const pesoMaisAntigoRecente = registrosRecentes[0].peso;
             const pesoMaisAtualRecente = registrosRecentes[registrosRecentes.length - 1].peso;
             const semanasRecentes = (new Date(registrosRecentes[registrosRecentes.length - 1].dataRaw) - new Date(registrosRecentes[0].dataRaw)) / (1000*60*60*24*7);
             mediaRecente = semanasRecentes > 0 ? Math.max(0, (pesoMaisAntigoRecente - pesoMaisAtualRecente) / semanasRecentes) : 0;
         } else if (registrosRecentes.length === 1 && registrosAntigos.length > 0) {
-            // Se tem apenas 1 registro recente, compara com o último antigo
             const ultimoAntigo = registrosAntigos[registrosAntigos.length - 1];
             const semanas = (new Date(registrosRecentes[0].dataRaw) - new Date(ultimoAntigo.dataRaw)) / (1000*60*60*24*7);
             mediaRecente = semanas > 0 ? Math.max(0, (ultimoAntigo.peso - registrosRecentes[0].peso) / semanas) : 0;
         }
 
-        // 2. Calcula perda antiga
         if (registrosAntigos.length >= 2) {
             const pesoMaisAntigo = configApp.pesoInicial || registrosAntigos[0].peso;
             const pesoMaisAtual = registrosAntigos[registrosAntigos.length - 1].peso;
@@ -1318,48 +989,26 @@
             mediaAntiga = semanasAntigas > 0 ? Math.max(0, (pesoMaisAntigo - pesoMaisAtual) / semanasAntigas) : 0;
         }
 
-        // 3. Ponderação de velocidade (Recente tem 60% de relevância, antiga tem 40%)
         let mediaFinal = 0;
         if (mediaRecente > 0 && mediaAntiga > 0) {
             mediaFinal = (mediaRecente * 0.6) + (mediaAntiga * 0.4);
         } else if (mediaRecente > 0) {
-            mediaFinal = mediaRecente; // Só tem dados recentes
+            mediaFinal = mediaRecente;
         } else if (mediaAntiga > 0) {
-            mediaFinal = mediaAntiga; // Só tem dados antigos
+            mediaFinal = mediaAntiga;
         } else {
-            // Fallback para média linear pura se o cálculo falhar
             const pesoInicialRef = configApp.pesoInicial || cronoSorted[0].peso;
             const pesoAtual = cronoSorted[cronoSorted.length - 1].peso;
             const semanasTotais = (new Date(cronoSorted[cronoSorted.length - 1].dataRaw) - new Date(cronoSorted[0].dataRaw)) / (1000*60*60*24*7);
             mediaFinal = semanasTotais > 0 ? (pesoInicialRef - pesoAtual) / semanasTotais : 1.0;
         }
 
-        // Limita a perda matemática a níveis biologicamente comuns (0.1kg a 2.5kg por semana)
         return Math.min(Math.max(mediaFinal, 0.10), 2.5);
     }
 
     /* ══════════════════════════════
         GRÁFICO IMC
      ══════════════════════════════ */
-    function calcularIMCValor(peso) {
-        const h = (configApp.altura||170)/100;
-        return peso/(h*h);
-    }
-    function corIMC(imc) {
-        if (imc<18.5) return '#60a5fa';
-        if (imc<25)   return '#34d399';
-        if (imc<30)   return '#fbbf24';
-        if (imc<35)   return '#fb923c';
-        return '#f43f5e';
-    }
-    function classeTextoIMC(imc) {
-        if (imc<18.5) return 'Abaixo do peso';
-        if (imc<25)   return 'Peso normal';
-        if (imc<30)   return 'Sobrepeso';
-        if (imc<35)   return 'Obeso G.I';
-        if (imc<40)   return 'Obeso G.II';
-        return 'Obeso G.III';
-    }
     function atualizarGraficoIMC() {
         const crono  = [...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
         const labels = [], valores = [], cores = [];
@@ -1391,80 +1040,6 @@
                 scales:{ x:{grid:{color:'rgba(51,65,85,.5)'},ticks:{color:'#64748b',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:8}}, y:{grid:{color:'rgba(51,65,85,.4)'},ticks:{color:'#64748b',font:{size:10},callback:v=>`${v}`},title:{display:true,text:'IMC',color:'#64748b',font:{size:10}}} }
             }
         });
-    }
-
-    /* ══════════════════════════════
-        CORRELAÇÃO SINTOMAS
-     ══════════════════════════════ */
-    const sintomaScore = { 'Sem Sintomas':0,'Muita Saciedade':1,'Fadiga':2,'Constipação':2,'Náusea Leve':3 };
-    const sintomaEmoji = { 'Sem Sintomas':'✅','Muita Saciedade':'😶','Fadiga':'😴','Constipação':'😣','Náusea Leve':'🤢' };
-    const sintomaCorMap = {
-        0:{ bg:'bg-emerald-500/15',border:'border-emerald-500/25',text:'text-emerald-300',bar:'bg-emerald-500' },
-        1:{ bg:'bg-blue-500/15',   border:'border-blue-500/25',   text:'text-blue-300',   bar:'bg-blue-400'    },
-        2:{ bg:'bg-amber-500/15',  border:'border-amber-500/25',  text:'text-amber-300',  bar:'bg-amber-500'   },
-        3:{ bg:'bg-rose-500/15',   border:'border-rose-500/25',   text:'text-rose-300',   bar:'bg-rose-500'    },
-    };
-
-    function calcularCorrelacaoSintomas() {
-        const crono = [...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
-        const res = {}; for(let d=1;d<=7;d++) res[d]=[];
-        crono.forEach((reg,idx)=>{
-            if(idx===0) return;
-            const diff = Math.round((new Date(reg.dataRaw)-new Date(crono[idx-1].dataRaw))/(1000*60*60*24));
-            if(diff>=1 && diff<=7) res[diff].push({ sintoma:reg.sintoma||'Sem Sintomas', dataRaw:reg.dataRaw });
-        });
-        return res;
-    }
-
-    window.mostrarDiaSintoma = function(dia) {
-        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-        document.querySelector(`.tab-btn[data-dia="${dia}"]`)?.classList.add('active');
-        const painel = document.getElementById('painelSintoma');
-        const dados  = dadosCorrelacao[dia] || [];
-        if (dados.length === 0) {
-            painel.innerHTML = `<div class="text-center py-3 text-slate-500 text-xs">Sem registros para D+${dia}</div>`;
-            document.getElementById('insightSintoma').classList.add('hidden');
-            return;
-        }
-        const contagem = {};
-        dados.forEach(d=>{ contagem[d.sintoma]=(contagem[d.sintoma]||0)+1; });
-        const total  = dados.length;
-        const sorted = Object.entries(contagem).sort((a,b)=>b[1]-a[1]);
-        painel.innerHTML = '';
-        sorted.forEach(([sint,count])=>{
-            const pct   = Math.round((count/total)*100);
-            const score = sintomaScore[sint]??1;
-            const cor   = sintomaCorMap[score]||sintomaCorMap[1];
-            const div   = document.createElement('div');
-            div.className = `${cor.bg} border ${cor.border} rounded-xl px-3 py-2`;
-            div.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-xs font-bold ${cor.text}">${sintomaEmoji[sint]||'•'} ${sint}</span><span class="text-[10px] font-black ${cor.text}">${count}x (${pct}%)</span></div><div class="w-full bg-slate-950/50 h-1.5 rounded-full overflow-hidden"><div class="${cor.bar} h-full rounded-full bar-anim" style="width:${pct}%"></div></div>`;
-            painel.appendChild(div);
-        });
-        const insight = document.getElementById('insightSintoma');
-        if (sorted[0] && sorted[0][0] !== 'Sem Sintomas') {
-            const pct = Math.round((sorted[0][1]/total)*100);
-            document.getElementById('txtInsight').innerText = `Em D+${dia}, você reportou "${sorted[0][0]}" em ${pct}% das doses. Considere isso ao planejar atividades nesse dia.`;
-            insight.classList.remove('hidden');
-        } else { insight.classList.add('hidden'); }
-    };
-
-    function renderizarMapaCalorSintomas() {
-        const mapa = document.getElementById('mapaCalor'); mapa.innerHTML='';
-        for(let d=1;d<=7;d++){
-            const dados = dadosCorrelacao[d]||[];
-            const cell  = document.createElement('div');
-            if (dados.length===0) {
-                cell.className='h-8 rounded-lg bg-slate-900/50 border border-slate-800/60 cursor-default';
-            } else {
-                const media = dados.reduce((a,d)=>a+(sintomaScore[d.sintoma]??0),0)/dados.length;
-                const cor   = media>=2.5?'bg-rose-500/50':media>=1.5?'bg-amber-500/45':media>=0.5?'bg-blue-500/40':'bg-emerald-500/40';
-                cell.className=`h-8 rounded-lg ${cor} border border-slate-700/30 flex items-center justify-center cursor-pointer`;
-                cell.innerHTML=`<span class="text-[8px] font-black text-white">${dados.length}</span>`;
-                cell.onclick=()=>mostrarDiaSintoma(d);
-            }
-            cell.title=`D+${d}: ${dados.length} registro(s)`;
-            mapa.appendChild(cell);
-        }
     }
 
     /* ══════════════════════════════
@@ -1528,7 +1103,6 @@
         const cronologico=[...registros].sort((a,b)=>new Date(a.dataRaw)-new Date(b.dataRaw));
         if(cronologico.length>0){ dataBase=new Date(cronologico[cronologico.length-1].dataRaw+'T12:00:00'); pesoAtualEvolutivo=cronologico[cronologico.length-1].peso; }
 
-        // Nova inteligência de cálculo de peso integrada!
         let mediaPerdaSemanal = calcularMediaPerdaInteligente(cronologico);
 
         document.getElementById('lblTotalEliminado').innerText=`-${(configApp.pesoInicial?(configApp.pesoInicial-pesoAtualEvolutivo):0).toFixed(1)} kg`;
@@ -1670,21 +1244,19 @@
      ══════════════════════════════ */
     function renderizarLista() {
         const listaHtml=document.getElementById('listaRegistros'); listaHtml.innerHTML='';
-        const sintomaConfig={'Sem Sintomas':{cor:'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',icone:'✅'},'Náusea Leve':{cor:'text-amber-400 bg-amber-500/10 border-amber-500/20',icone:'🤢'},'Muita Saciedade':{cor:'text-blue-400 bg-blue-500/10 border-blue-500/20',icone:'😶'},'Constipação':{cor:'text-orange-400 bg-orange-500/10 border-orange-500/20',icone:'😣'},'Fadiga':{cor:'text-violet-400 bg-violet-500/10 border-violet-500/20',icone:'😴'}};
         const localConfig={'Abdômen (Esquerdo)':{cor:'text-teal-300',dot:'bg-teal-400'},'Abdômen (Direito)':{cor:'text-teal-300',dot:'bg-teal-400'},'Coxa Esquerda':{cor:'text-violet-300',dot:'bg-violet-400'},'Coxa Direita':{cor:'text-violet-300',dot:'bg-violet-400'}};
         const ordenado=[...registros].sort((a,b)=>new Date(b.dataRaw)-new Date(a.dataRaw));
         document.getElementById('lblTotalRegistros').innerText=`${ordenado.length} aplicação${ordenado.length!==1?'ões':''} registrada${ordenado.length!==1?'s':''}`;
         if(ordenado.length>0){document.getElementById('badgeUltimaDose').classList.remove('hidden');document.getElementById('lblDataUltimaDose').innerText=ordenado[0].dataFormatada;}
         if(ordenado.length===0){listaHtml.innerHTML=`<div class="flex flex-col items-center justify-center py-6 text-center gap-2"><span class="text-3xl opacity-30">💉</span><p class="text-slate-500 text-xs">Nenhuma dose registrada ainda.</p></div>`;return;}
         ordenado.forEach((reg,idx)=>{
-            const sint=sintomaConfig[reg.sintoma]||sintomaConfig['Sem Sintomas'];
             const loc=localConfig[reg.local]||{cor:'text-slate-300',dot:'bg-slate-400'};
             const isPrim=idx===0;
             let varHtml='';
             if(idx<ordenado.length-1){const diff=reg.peso-ordenado[idx+1].peso;varHtml=diff<0?`<span class="text-[9px] font-bold text-emerald-400">▼ ${Math.abs(diff).toFixed(1)} kg</span>`:diff>0?`<span class="text-[9px] font-bold text-rose-400">▲ ${diff.toFixed(1)} kg</span>`:`<span class="text-[9px] text-slate-500">= sem variação</span>`;}
             const item=document.createElement('div');
             item.className=`rounded-xl border p-3 ${isPrim?'bg-slate-900/80 border-indigo-500/20':'bg-slate-900/40 border-slate-800'}`;
-            item.innerHTML=`<div class="flex justify-between items-start"><div class="flex items-center gap-2.5"><div class="text-center bg-slate-800 rounded-lg px-2 py-1.5 border border-slate-700 min-w-[38px]"><span class="text-sm font-black text-white leading-none block">${reg.dataFormatada.split('/')[0]}</span><span class="text-[9px] text-slate-400 font-semibold">/${reg.dataFormatada.split('/')[1]||''}</span></div><div class="space-y-0.5"><div class="flex items-center gap-2"><span class="text-sm font-black text-white">${reg.peso} kg</span>${varHtml}${isPrim?'<span class="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded-md font-bold">Última</span>':''}</div><div class="flex items-center gap-2 flex-wrap"><span class="text-[9px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">${formatarDose(reg.dose)}</span><span class="flex items-center gap-1 text-[9px] ${loc.cor}"><span class="w-1.5 h-1.5 rounded-full ${loc.dot}"></span>${reg.local}</span></div><span class="inline-flex items-center gap-1 text-[9px] border rounded-md px-1.5 py-0.5 ${sint.cor}">${sint.icone} ${reg.sintoma||'Sem Sintomas'}</span></div></div><button onclick="deletarRegistroUnico(${reg.id})" class="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 active:scale-90 transition-all cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`;
+            item.innerHTML=`<div class="flex justify-between items-start"><div class="flex items-center gap-2.5"><div class="text-center bg-slate-800 rounded-lg px-2 py-1.5 border border-slate-700 min-w-[38px]"><span class="text-sm font-black text-white leading-none block">${reg.dataFormatada.split('/')[0]}</span><span class="text-[9px] text-slate-400 font-semibold">/${reg.dataFormatada.split('/')[1]||''}</span></div><div class="space-y-0.5"><div class="flex items-center gap-2"><span class="text-sm font-black text-white">${reg.peso} kg</span>${varHtml}${isPrim?'<span class="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded-md font-bold">Última</span>':''}</div><div class="flex items-center gap-2 flex-wrap"><span class="text-[9px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">${formatarDose(reg.dose)}</span><span class="flex items-center gap-1 text-[9px] ${loc.cor}"><span class="w-1.5 h-1.5 rounded-full ${loc.dot}"></span>${reg.local}</span></div></div></div><button onclick="deletarRegistroUnico(${reg.id})" class="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 active:scale-90 transition-all cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`;
             listaHtml.appendChild(item);
         });
     }
@@ -1695,7 +1267,7 @@
     window.limparTudo = async function() {
         if(confirm('Apagar todo o histórico da nuvem?')){
             registros=[];
-            configApp={pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,aguaLog:{},notifDose:true,notifAgua:true,tutorialConcluido:false};
+            configApp={pesoInicial:null,pesoMeta:null,ampolas:1,doseAlvo:2.5,altura:null,idade:null,sexo:'M',atividade:1.2,tutorialConcluido:false};
             await setDoc(doc(db,"usuarios",usuarioAtual.uid),{registros,configApp});
             toggleConfigModal(); atualizarTudo();
         }
@@ -1709,11 +1281,7 @@
         calcularLogicaPrincipal();
         atualizarProgressoMeta();
         atualizarGrafico();
-        processarPainelAgua();
         atualizarNota();
-        dadosCorrelacao = calcularCorrelacaoSintomas();
-        mostrarDiaSintoma(1);
-        renderizarMapaCalorSintomas();
         atualizarGraficoIMC();
     }
 </script>
